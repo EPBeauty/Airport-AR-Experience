@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Airport Security AR Guide</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <title>Enhanced Airport Security AR Guide</title>
+    <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
@@ -35,10 +36,18 @@
             user-select: none;
         }
         
+        .ar-scene {
+            width: 100%;
+            height: 100vh;
+            background-color: transparent;
+            position: relative;
+        }
+        
         model-viewer {
             width: 100%;
             height: 100vh;
             background-color: transparent;
+            --poster-color: transparent;
         }
         
         .ar-button {
@@ -121,10 +130,13 @@
             position: relative;
         }
         
-        .item-button img {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
+        .item-button.active {
+            border: 2px solid var(--primary-green);
+        }
+        
+        .item-button model-viewer {
+            width: 100%;
+            height: 60px;
         }
         
         .item-button span {
@@ -133,46 +145,7 @@
             font-weight: 500;
         }
         
-        .tray-mode {
-            background-color: #34C759;
-            color: white;
-            border-radius: 20px;
-            padding: 8px 16px;
-            margin: 10px auto;
-            display: inline-block;
-            font-weight: 600;
-        }
-        
-        .tray-outline {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 40%;
-            border: 3px dashed var(--primary-green);
-            border-radius: 10px;
-            z-index: 5;
-            pointer-events: none;
-        }
-        
-        .next-button {
-            position: absolute;
-            bottom: 120px;
-            right: 20px;
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 100;
-        }
-        
-        .status-message {
+        .feedback-message {
             position: absolute;
             bottom: 120px;
             left: 50%;
@@ -189,429 +162,811 @@
             max-width: 80%;
         }
         
-        .status-message.visible {
+        .feedback-message.visible {
             opacity: 1;
         }
         
-        /* Container for multiple 3D models */
-        .models-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 2;
+        .next-tray-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 120;
+            display: none;
         }
         
-        .ar-model {
-            position: absolute;
-            pointer-events: auto;
-            width: 150px;
-            height: 150px;
-            z-index: 10;
+        .next-tray-message h2 {
+            color: var(--black);
+            margin-top: 0;
+            font-weight: 600;
         }
         
-        /* Add a rotation control to models */
-        .rotation-control {
+        .next-tray-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 15px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 44px; /* Minimum touch target size */
+        }
+        
+        /* Progress button that appears after placing items */
+        .progress-button {
             position: absolute;
-            top: -20px;
-            right: -20px;
-            width: 30px;
-            height: 30px;
-            background-color: white;
-            border-radius: 50%;
+            bottom: 120px;
+            right: 20px;
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+            min-height: 44px; /* Minimum touch target size */
+        }
+
+        .complete-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 120;
+            display: none;
+        }
+        
+        .complete-message h2 {
+            color: var(--black);
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        .complete-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 15px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .initial-instruction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 120;
+        }
+        
+        .initial-instruction h2 {
+            color: var(--black);
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        .start-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 15px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        /* Tray mode indicator */
+        .tray-mode {
+            position: absolute;
+            top: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(52, 199, 89, 0.9);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            z-index: 100;
+            text-align: center;
+        }
+        
+        /* Controls for item manipulation */
+        .item-controls {
+            position: absolute;
+            top: 85px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .control-button {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--black);
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            width: 44px;
+            height: 44px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 15;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-size: 16px;
+        }
+        
+        .control-button.active {
+            background-color: var(--primary-green);
+            color: var(--white);
+        }
+        
+        .item-placed {
+            position: absolute;
+            pointer-events: auto;
+            touch-action: none;
+            transform-origin: center;
+            z-index: 5;
+        }
+        
+        .item-placed model-viewer {
+            width: 100%;
+            height: 100%;
+            --poster-color: transparent;
+        }
+        
+        .done-button {
+            position: absolute;
+            bottom: 120px;
+            left: 20px;
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+            min-height: 44px;
+        }
+        
+        .delete-button {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 24px;
+            height: 24px;
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-weight: bold;
+            z-index: 101;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <!-- Main AR viewer with camera only - no models -->
-    <model-viewer
-        id="arViewer"
-        camera-controls
-        ar
-        ar-modes="webxr scene-viewer quick-look"
-        ar-scale="fixed"
-        interaction-prompt="none"
-        shadow-intensity="1"
-        environment-image="neutral">
-        
-        <button slot="ar-button" class="ar-button" id="arButton">
-            Start AR Experience
-        </button>
-    </model-viewer>
-    
-    <!-- Container for multiple AR models -->
-    <div class="models-container" id="modelsContainer"></div>
-    
-    <!-- Instruction panel -->
-    <div class="instructions-panel">
-        <h2>Place Items in Security Tray</h2>
-        <div class="tray-mode" id="trayModeLabel">Regular Items Tray</div>
-        <p>Tap items below to position in your real tray</p>
+    <div class="initial-instruction" id="initialInstruction">
+        <h2>Airport Security Check</h2>
+        <p>Place a physical security tray in front of you.</p>
+        <p>You'll use your camera to place virtual items in your real tray.</p>
+        <button class="start-button" id="startButton">Start AR Experience</button>
     </div>
     
-    <!-- Tray outline -->
-    <div class="tray-outline"></div>
+    <div class="instructions-panel" style="display: none;" id="instructionsPanel">
+        <h2>Select and Place Items</h2>
+        <p>Tap items below, then place them in your tray. Move and rotate by dragging.</p>
+    </div>
     
-    <!-- Next button -->
-    <button class="next-button" id="nextButton" style="display: none;">
-        Continue to Laptop Tray
+    <div class="tray-mode" id="trayMode" style="display: none;">
+        Laptop Tray
+    </div>
+    
+    <div class="next-tray-message" id="nextTrayMessage" style="display: none;">
+        <h2>Now Use A Different Tray</h2>
+        <p>Place a new physical tray for your other items.</p>
+        <button class="next-tray-button" id="nextTrayButton">I've Placed A New Tray</button>
+    </div>
+    
+    <div class="complete-message" id="completeMessage" style="display: none;">
+        <h2>Security Check Complete!</h2>
+        <p>You've successfully arranged your items for airport security screening.</p>
+        <button class="complete-button" id="restartButton">Start Over</button>
+    </div>
+    
+    <div class="feedback-message" id="feedbackMessage"></div>
+    
+    <button class="progress-button" id="progressButton" style="display: none;">
+        Continue to Next Tray
     </button>
     
-    <!-- Status message -->
-    <div class="status-message" id="statusMessage"></div>
+    <button class="done-button" id="doneButton" style="display: none;">
+        Done Placing Items
+    </button>
     
-    <!-- Item selection -->
-    <div class="item-selection" id="itemSelection"></div>
+    <div class="item-controls" id="itemControls">
+        <button class="control-button" id="rotateButton">↻</button>
+        <button class="control-button" id="moveButton">↕</button>
+    </div>
+    
+    <div class="item-selection" id="itemSelection" style="display: none;">
+        <!-- Item buttons will be added here -->
+    </div>
+    
+    <div class="ar-scene" id="arScene" style="display: none;">
+        <model-viewer 
+            id="arViewer"
+            camera-controls
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed"
+            ar-placement="floor"
+            interaction-prompt="none"
+            shadow-intensity="1"
+            environment-image="neutral">
+        </model-viewer>
+    </div>
     
     <script>
-        // ===== ITEM DEFINITIONS =====
-        // Define items with their models and scales
-        const items = {
-            regular: [
-                { 
-                    id: 'bag', 
-                    name: 'Bag', 
-                    model: 'bag.glb', 
-                    scale: '1.3 1.3 1.3', 
-                    thumbnail: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJhZyI+PHBhdGggZD0iTTEwIDEzYTUgNSAwIDAgMCA0IDAiLz48cGF0aCBkPSJNNyA4aC0xYTUgNSAwIDAgMC01IDV2MmMwICAxLjEuOS0uOSAyIDBtMiAzaDEwYTUgNSAwIDAgMCA1LTV2LTJhNSA1IDAgMCAwLTUtNWgtNC4xOGEyIDIgMCAwIDAtMS41Ny0uNzVINkEyIDIgMCAwIDAgNCAzLjc1VjdoMTgiLz48L3N2Zz4=' 
-                },
-                { 
-                    id: 'phone', 
-                    name: 'Phone', 
-                    model: 'phone.glb', 
-                    scale: '0.7 0.7 0.7',
-                    thumbnail: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNtYXJ0cGhvbmUiPjxyZWN0IHdpZHRoPSIxNCIgaGVpZ2h0PSIyMCIgeD0iNSIgeT0iMiIgcng9IjIiLz48cGF0aCBkPSJNMTIgMThoLjAxIi8+PC9zdmc+'
-                },
-                { 
-                    id: 'keys', 
-                    name: 'Keys', 
-                    model: 'keys.glb', 
-                    scale: '0.6 0.6 0.6',
-                    thumbnail: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWtleSI+PHBhdGggZD0iTTIxIDJsLTIgMi0zLjk5My0uMDFMMTAgOUwzIDE2bDUgNSA3LTctLjAxMi01LjA0OUwxNyA2bDIgMiAyLTYiLz48cGF0aCBkPSJNMTYgOGw0IDRNNCAxNWw0IDQiLz48L3N2Zz4='
-                },
-                { 
-                    id: 'hat', 
-                    name: 'Hat', 
-                    model: 'hat.glb', 
-                    scale: '0.9 0.9 0.9',
-                    thumbnail: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWhhcmQtaGF0Ij48cGF0aCBkPSJNMiAxMWEzLjc5OSAzLjc5OSAwIDAgMCAyLjIgNi4zNlY5LjMxYTgtOCAwIDAgMSA1LjY3LTcuNjQgMy4yOTkgMy4yOTkgMCAwIDEgNC4wOCAyLjEzIDMuMDM5IDMuMDM5IDAgMCAxIC4xMyAyLjU2IDguMDI5IDguMDI5IDAgMCAxIDcuOSA3LjU4LjI5LjAwMiAwIDAgMCAwIC4xIDMuODEgMy44MDkgMCAwIDEgLjA5IDNBMy44MDIgMy44MDIgMCAwIDEgMTggMjBoLTN2LTFhMiAyIDAgMSAwLTQgMHYxSDZhMy43OTkgMy43OTkgMCAwIDEtMy42NC0yLjg0QTMuODAyIDMuODAyIDAgMCAxIDIgMTFaIi8+PHBhdGggZD0iTTExIDEzYTIgMiAwIDAgMCAyLTIiLz48L3N2Zz4='
-                },
-                { 
-                    id: 'charger', 
-                    name: 'Charger', 
-                    model: 'charger.glb', 
-                    scale: '0.75 0.75 0.75',
-                    thumbnail: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWJhdHRlcnktY2hhcmdpbmciPjxwYXRoIGQ9Ik0yIDlhMiAyIDAgMCAxIDItMmgxM2EyIDIgMCAwIDEgMSA0aDJhMiAyIDAgMCAxIDAgNGgtMmEyIDIgMCAwIDEtMSA0SDRhMiAyIDAgMCAxLTItMnYtNloiLz48cGF0aCBkPSJNMTEgNiA3IDEyaDQgTCA3IDE4Ii8+PC9zdmc+'
-                }
-            ],
-            laptop: [
-                { 
-                    id: 'laptop', 
-                    name: 'Laptop', 
-                    model: 'laptop.glb', 
-                    scale: '1.0 1.0 1.0',
-                    thumbnail: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWxhcHRvcCI+PHJlY3Qgd2lkdGg9IjE4IiBoZWlnaHQ9IjEyIiB4PSIzIiB5PSI0IiByeD0iMiIgcnk9IjIiLz48bGluZSB4MT0iMiIgeDI9IjIyIiB5MT0iMjAiIHkyPSIyMCIvPjwvc3ZnPg=='
-                }
-            ]
+        // Available items to place with realistic size ratios
+        const items = [
+            { 
+                id: 'laptop', 
+                name: 'Laptop', 
+                type: 'laptop', 
+                model: 'laptop.glb', 
+                scale: '0.5 0.5 0.5',  // Real-world scale for AR
+                width: 150,
+                height: 100
+            },
+            { 
+                id: 'phone', 
+                name: 'Phone', 
+                type: 'other', 
+                model: 'phone.glb', 
+                scale: '0.3 0.3 0.3',  // Real-world scale for AR (smaller than laptop)
+                width: 60,
+                height: 120
+            },
+            { 
+                id: 'charger', 
+                name: 'Charger', 
+                type: 'other', 
+                model: 'charger.glb', 
+                scale: '0.3 0.3 0.3',  // Real-world scale for AR
+                width: 80,
+                height: 60
+            },
+            { 
+                id: 'bag', 
+                name: 'Bag', 
+                type: 'other', 
+                model: 'bag.glb', 
+                scale: '0.6 0.6 0.6',  // Real-world scale for AR (larger than phone)
+                width: 140,
+                height: 120
+            },
+            { 
+                id: 'hat', 
+                name: 'Hat', 
+                type: 'other', 
+                model: 'hat.glb', 
+                scale: '0.4 0.4 0.4',  // Real-world scale for AR (medium size)
+                width: 100,
+                height: 60
+            },
+            { 
+                id: 'keys', 
+                name: 'Keys', 
+                type: 'other', 
+                model: 'keys.glb', 
+                scale: '0.25 0.25 0.25',  // Real-world scale for AR (smaller than phone)
+                width: 60,
+                height: 40
+            }
+        ];
+        
+        // Track current tray mode
+        let currentTrayMode = 'laptop'; // Start with laptop tray
+        
+        // Track items placed in AR
+        let placedItems = {
+            laptop: [],
+            other: []
         };
         
-        // ===== STATE MANAGEMENT =====
-        // Track current tray mode and placed items
-        let currentMode = 'regular';
-        const placedItems = {
-            regular: [],
-            laptop: []
-        };
+        // Track currently selected item for placing
+        let selectedItem = null;
         
-        // ===== DOM REFERENCES =====
-        const arViewer = document.getElementById('arViewer');
-        const arButton = document.getElementById('arButton');
-        const modelsContainer = document.getElementById('modelsContainer');
-        const trayModeLabel = document.getElementById('trayModeLabel');
+        // Track currently selected placed item for manipulation
+        let selectedPlacedItem = null;
+        
+        // Track interaction mode (move or rotate)
+        let interactionMode = 'move';
+        
+        // Track AR session state
+        let arActive = false;
+        
+        // Track unique ID for placed items
+        let placedItemId = 0;
+        
+        // DOM Elements
+        const initialInstruction = document.getElementById('initialInstruction');
+        const instructionsPanel = document.getElementById('instructionsPanel');
         const itemSelection = document.getElementById('itemSelection');
-        const nextButton = document.getElementById('nextButton');
-        const statusMessage = document.getElementById('statusMessage');
+        const arViewer = document.getElementById('arViewer');
+        const arScene = document.getElementById('arScene');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const progressButton = document.getElementById('progressButton');
+        const doneButton = document.getElementById('doneButton');
+        const nextTrayMessage = document.getElementById('nextTrayMessage');
+        const nextTrayButton = document.getElementById('nextTrayButton');
+        const completeMessage = document.getElementById('completeMessage');
+        const restartButton = document.getElementById('restartButton');
+        const trayMode = document.getElementById('trayMode');
+        const startButton = document.getElementById('startButton');
+        const itemControls = document.getElementById('itemControls');
+        const rotateButton = document.getElementById('rotateButton');
+        const moveButton = document.getElementById('moveButton');
         
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', () => {
-            // Initialize UI
-            updateItemSelection();
+        // Initialize event listeners
+        function initializeApp() {
+            // Start AR button
+            startButton.addEventListener('click', () => {
+                startARExperience();
+            });
             
-            // Set up event listeners
-            arViewer.addEventListener('ar-status', (event) => {
-                if (event.detail.status === 'session-started') {
-                    console.log('AR session started');
-                    showStatusMessage('AR active! Tap items to place them in your tray');
+            // Progress button (to move to next tray)
+            progressButton.addEventListener('click', () => {
+                if (placedItems.laptop.length > 0) {
+                    progressButton.style.display = 'none';
+                    doneButton.style.display = 'none';
+                    nextTrayMessage.style.display = 'block';
                 }
             });
             
-            // Next button click
-            nextButton.addEventListener('click', switchTrayMode);
-        });
+            // Done button (when finished placing items)
+            doneButton.addEventListener('click', () => {
+                if (currentTrayMode === 'laptop' && placedItems.laptop.length > 0) {
+                    progressButton.style.display = 'block';
+                    showFeedback('Laptop tray complete! Continue when ready.');
+                } else if (currentTrayMode === 'other' && placedItems.other.length > 0) {
+                    completeMessage.style.display = 'block';
+                }
+            });
+            
+            // Next tray button
+            nextTrayButton.addEventListener('click', () => {
+                nextTrayMessage.style.display = 'none';
+                switchToOtherItemsTray();
+            });
+            
+            // Restart button
+            restartButton.addEventListener('click', () => {
+                resetExperience();
+            });
+            
+            // Control buttons
+            rotateButton.addEventListener('click', () => {
+                interactionMode = 'rotate';
+                updateControlButtons();
+            });
+            
+            moveButton.addEventListener('click', () => {
+                interactionMode = 'move';
+                updateControlButtons();
+            });
+            
+            // AR status change
+            arViewer.addEventListener('ar-status', (event) => {
+                if (event.detail.status === 'session-started') {
+                    console.log('AR session started');
+                    arActive = true;
+                    
+                    // Show UI elements needed during AR
+                    instructionsPanel.style.display = 'block';
+                    itemSelection.style.display = 'flex';
+                    trayMode.style.display = 'block';
+                    doneButton.style.display = 'block';
+                    
+                    // Initialize items for selection
+                    updateItemSelection();
+                } else if (event.detail.status === 'not-presenting') {
+                    console.log('AR session ended');
+                    arActive = false;
+                } else if (event.detail.status === 'failed') {
+                    console.log('AR session failed');
+                    showFeedback('AR failed to start. Please try again.', false);
+                }
+            });
+        }
         
-        // ===== UI FUNCTIONS =====
-        // Update item selection based on current mode
+        // Start the AR experience
+        function startARExperience() {
+            // Hide initial instruction
+            initialInstruction.style.display = 'none';
+            
+            // Show AR viewer
+            arScene.style.display = 'block';
+            
+            // Start AR mode by clicking AR button
+            setTimeout(() => {
+                // Find and click the AR button to activate camera
+                const arButton = document.querySelector('button[slot="ar-button"]');
+                if (arButton) {
+                    arButton.click();
+                } else {
+                    // Fallback if button not found
+                    arViewer.activateAR();
+                }
+            }, 100);
+        }
+        
+        // Update available items based on current tray mode
         function updateItemSelection() {
-            // Clear current buttons
+            // Clear current items
             itemSelection.innerHTML = '';
             
             // Get items for current mode
-            const currentItems = items[currentMode];
+            let availableItems;
+            if (currentTrayMode === 'laptop') {
+                availableItems = items.filter(item => item.type === 'laptop');
+                trayMode.textContent = 'Laptop Tray';
+            } else {
+                availableItems = items.filter(item => item.type === 'other');
+                trayMode.textContent = 'Other Items Tray';
+            }
             
-            // Create buttons for each item
-            currentItems.forEach(item => {
+            // Add buttons for available items
+            availableItems.forEach(item => {
                 const button = document.createElement('button');
                 button.className = 'item-button';
-                button.addEventListener('click', () => placeItem(item));
+                button.setAttribute('data-id', item.id);
                 
-                const img = document.createElement('img');
-                img.src = item.thumbnail;
-                img.alt = item.name;
+                // Thumbnail image (model-viewer for preview)
+                const modelViewer = document.createElement('model-viewer');
+                modelViewer.src = item.model;
+                modelViewer.setAttribute('auto-rotate', 'true');
+                modelViewer.setAttribute('camera-controls', 'false');
+                modelViewer.setAttribute('ar', 'false');
+                modelViewer.setAttribute('shadow-intensity', '1');
                 
-                const span = document.createElement('span');
-                span.textContent = item.name;
+                // Label
+                const label = document.createElement('span');
+                label.textContent = item.name;
                 
-                button.appendChild(img);
-                button.appendChild(span);
+                button.appendChild(modelViewer);
+                button.appendChild(label);
+                
+                // Add click event to select item
+                button.addEventListener('click', () => {
+                    selectItemForPlacement(item);
+                });
                 
                 itemSelection.appendChild(button);
             });
         }
         
-        // Switch tray mode between regular and laptop
-        function switchTrayMode() {
-            if (currentMode === 'regular') {
-                // Switch to laptop mode
-                currentMode = 'laptop';
-                trayModeLabel.textContent = 'Laptop Tray';
-                nextButton.textContent = 'Complete Security Check';
-                
-                // Hide regular items
-                const regularItemModels = document.querySelectorAll(`.ar-model[data-mode="regular"]`);
-                regularItemModels.forEach(model => {
-                    model.style.display = 'none';
-                });
-                
-                // Update item selection
-                updateItemSelection();
-                
-                // Hide next button until laptop is placed
-                nextButton.style.display = 'none';
-                
-                // Show status message
-                showStatusMessage('Place laptop in a separate tray');
-            } else {
-                // Complete security check
-                showStatusMessage('Security check complete!');
-                
-                setTimeout(() => {
-                    alert('Security check complete! All items have been properly arranged.');
-                    location.reload(); // Refresh to start over
-                }, 1500);
-            }
-        }
-        
-        // ===== AR FUNCTIONS =====
-        // Place an item in AR
-        function placeItem(item) {
-            // Create a model-viewer for this item
-            createModelViewer(item);
+        // Select an item for placement
+        function selectItemForPlacement(item) {
+            // Update selected item
+            selectedItem = item;
             
-            // Show status message
-            showStatusMessage(`Placing ${item.name}... Position in your tray`);
-            
-            // Show next button if at least one item is placed
-            if (placedItems[currentMode].length === 0) {
-                // This is the first item in this mode
-                nextButton.style.display = 'block';
-            }
-            
-            // Add to placed items
-            placedItems[currentMode].push(item);
-        }
-        
-        // Create a model-viewer for an item
-        function createModelViewer(item) {
-            // Create a container for this model
-            const modelContainer = document.createElement('div');
-            modelContainer.className = 'ar-model';
-            modelContainer.setAttribute('data-id', item.id);
-            modelContainer.setAttribute('data-mode', currentMode);
-            
-            // Create the model-viewer
-            const modelViewer = document.createElement('model-viewer');
-            modelViewer.src = item.model;
-            modelViewer.setAttribute('scale', item.scale);
-            modelViewer.setAttribute('ar', 'false');
-            modelViewer.setAttribute('camera-controls', 'true');
-            modelViewer.setAttribute('shadow-intensity', '1');
-            modelViewer.setAttribute('environment-image', 'neutral');
-            modelViewer.style.width = '100%';
-            modelViewer.style.height = '100%';
-            
-            // Add a rotation control
-            const rotationControl = document.createElement('div');
-            rotationControl.className = 'rotation-control';
-            rotationControl.innerHTML = '↻';
-            rotationControl.addEventListener('click', () => {
-                // Rotate the model 45 degrees
-                const currentOrient = modelViewer.getAttribute('orientation') || '0deg 0deg 0deg';
-                const orientValues = currentOrient.split(' ');
-                const yRot = parseInt(orientValues[1]) || 0;
-                const newYRot = (yRot + 45) % 360;
-                orientValues[1] = `${newYRot}deg`;
-                modelViewer.setAttribute('orientation', orientValues.join(' '));
+            // Update UI to show selected item
+            const buttons = document.querySelectorAll('.item-button');
+            buttons.forEach(button => {
+                if (button.getAttribute('data-id') === item.id) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
             });
             
-            // Add model-viewer to container
-            modelContainer.appendChild(modelViewer);
-            modelContainer.appendChild(rotationControl);
+            // Show feedback to the user
+            showFeedback(`Tap in your tray to place the ${item.name}`);
             
-            // Position in center of tray initially
-            const trayRect = document.querySelector('.tray-outline').getBoundingClientRect();
-            const left = trayRect.left + (trayRect.width - 150) / 2;
-            const top = trayRect.top + (trayRect.height - 150) / 2;
+            // Setup the AR scene for placement
+            arViewer.src = item.model;
+            arViewer.setAttribute('scale', item.scale);
             
-            modelContainer.style.left = `${left}px`;
-            modelContainer.style.top = `${top}px`;
-            
-            // Make the model draggable
-            makeDraggable(modelContainer, trayRect);
-            
-            // Add to DOM
-            modelsContainer.appendChild(modelContainer);
-            
-            return modelContainer;
+            // Add click event to AR viewer for placement
+            arViewer.addEventListener('click', placeSelectedItem);
         }
         
-        // Make an element draggable
-        function makeDraggable(element, trayRect) {
-            let isDragging = false;
-            let startX, startY;
-            let startLeft, startTop;
+        // Place the selected item in the AR scene
+        function placeSelectedItem(event) {
+            if (!selectedItem) return;
             
-            // Add mouse/touch event listeners
-            element.addEventListener('mousedown', dragStart);
-            element.addEventListener('touchstart', touchStart, { passive: false });
-            document.addEventListener('mousemove', dragMove);
-            document.addEventListener('touchmove', touchMove, { passive: false });
-            document.addEventListener('mouseup', dragEnd);
-            document.addEventListener('touchend', dragEnd);
+            // Remove event listener to prevent multiple placements
+            arViewer.removeEventListener('click', placeSelectedItem);
             
-            function touchStart(e) {
-                e.preventDefault();
-                const touch = e.touches[0];
-                startDrag(touch.clientX, touch.clientY);
+            // Create a unique ID for this placed item
+            const uniqueId = `item-${selectedItem.id}-${placedItemId++}`;
+            
+            // Create a new element for the placed item
+            const placedItemElement = document.createElement('div');
+            placedItemElement.className = 'item-placed';
+            placedItemElement.id = uniqueId;
+            placedItemElement.style.width = `${selectedItem.width}px`;
+            placedItemElement.style.height = `${selectedItem.height}px`;
+            
+            // Position at tap location
+            const rect = arViewer.getBoundingClientRect();
+            const x = event.clientX - rect.left - (selectedItem.width / 2);
+            const y = event.clientY - rect.top - (selectedItem.height / 2);
+            placedItemElement.style.left = `${x}px`;
+            placedItemElement.style.top = `${y}px`;
+            
+            // Create model-viewer element for the placed item
+            const modelViewer = document.createElement('model-viewer');
+            modelViewer.src = selectedItem.model;
+            modelViewer.setAttribute('camera-controls', 'false');
+            modelViewer.setAttribute('ar', 'false');
+            modelViewer.setAttribute('shadow-intensity', '1');
+            modelViewer.setAttribute('scale', selectedItem.scale);
+            modelViewer.style.pointerEvents = 'none';
+            
+            // Create delete button
+            const deleteButton = document.createElement('button');
+            deleteButton.className = 'delete-button';
+            deleteButton.textContent = '×';
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                deletePlacedItem(uniqueId, selectedItem.type);
+            });
+            
+            // Add to placed item element
+            placedItemElement.appendChild(modelViewer);
+            placedItemElement.appendChild(deleteButton);
+            
+            // Add to AR scene
+            arScene.appendChild(placedItemElement);
+            
+            // Setup interaction handlers
+            setupItemInteraction(placedItemElement);
+            
+            // Record placed item
+            const placedItem = {
+                id: uniqueId,
+                itemId: selectedItem.id,
+                element: placedItemElement,
+                item: selectedItem
+            };
+            
+            if (selectedItem.type === 'laptop') {
+                placedItems.laptop.push(placedItem);
+            } else {
+                placedItems.other.push(placedItem);
             }
             
-            function dragStart(e) {
-                if (e.target.className === 'rotation-control') return;
-                startDrag(e.clientX, e.clientY);
-            }
+            // Show success feedback
+            showFeedback(`${selectedItem.name} placed successfully! Tap and drag to position.`);
             
-            function startDrag(x, y) {
-                isDragging = true;
-                startX = x;
-                startY = y;
-                startLeft = parseInt(element.style.left) || 0;
-                startTop = parseInt(element.style.top) || 0;
-                
-                // Add dragging class
-                element.classList.add('dragging');
-                
-                // Bring to front
-                element.style.zIndex = '20';
-            }
+            // Reset for next placement
+            arViewer.src = '';
+            selectedItem = null;
             
-            function touchMove(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                const touch = e.touches[0];
-                drag(touch.clientX, touch.clientY);
-            }
+            // Update selection buttons
+            const buttons = document.querySelectorAll('.item-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+        }
+        
+        // Setup interaction for placed items (move, rotate)
+        function setupItemInteraction(element) {
+            // Touch/mouse events for selection
+            element.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                selectPlacedItem(element);
+            });
             
-            function dragMove(e) {
-                if (!isDragging) return;
-                drag(e.clientX, e.clientY);
-            }
+            // Setup Hammer.js for gestures
+            const hammer = new Hammer(element);
             
-            function drag(x, y) {
-                const dx = x - startX;
-                const dy = y - startY;
+            // Pan for moving
+            hammer.on('pan', (e) => {
+                if (interactionMode !== 'move') return;
                 
-                const newLeft = startLeft + dx;
-                const newTop = startTop + dy;
+                const dx = e.deltaX;
+                const dy = e.deltaY;
                 
-                element.style.left = `${newLeft}px`;
-                element.style.top = `${newTop}px`;
-            }
+                const currentLeft = parseInt(element.style.left) || 0;
+                const currentTop = parseInt(element.style.top) || 0;
+                
+                element.style.left = `${currentLeft + dx}px`;
+                element.style.top = `${currentTop + dy}px`;
+                
+                // Reset delta for next event
+                e.srcEvent.preventDefault();
+            });
             
-            function dragEnd() {
-                if (!isDragging) return;
-                isDragging = false;
+            // Rotate gesture
+            hammer.on('panmove', (e) => {
+                if (interactionMode !== 'rotate') return;
                 
-                // Remove dragging class
-                element.classList.remove('dragging');
-                
-                // Reset z-index
-                element.style.zIndex = '10';
-                
-                // Check if model is in tray
-                keepInTray();
-            }
-            
-            function keepInTray() {
-                // Get element dimensions
                 const rect = element.getBoundingClientRect();
-                
-                // Get tray dimensions (passed as parameter)
-                const trayLeft = trayRect.left;
-                const trayRight = trayRect.right;
-                const trayTop = trayRect.top;
-                const trayBottom = trayRect.bottom;
-                
-                // Calculate center position of element
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
                 
-                // Check if center is in tray
-                const inTray = (
-                    centerX >= trayLeft &&
-                    centerX <= trayRight &&
-                    centerY >= trayTop &&
-                    centerY <= trayBottom
-                );
+                // Calculate angle based on touch position relative to center
+                const angle = Math.atan2(
+                    e.center.y - centerY,
+                    e.center.x - centerX
+                ) * (180 / Math.PI);
                 
-                if (!inTray) {
-                    // Move element back into tray
-                    const newLeft = Math.max(trayLeft, Math.min(trayRight - rect.width, rect.left));
-                    const newTop = Math.max(trayTop, Math.min(trayBottom - rect.height, rect.top));
-                    
-                    element.style.left = `${newLeft}px`;
-                    element.style.top = `${newTop}px`;
-                    
-                    showStatusMessage('Keep items within the tray outline!');
-                }
+                // Apply rotation
+                element.style.transform = `rotate(${angle}deg)`;
+                e.srcEvent.preventDefault();
+            });
+        }
+        
+        // Select a placed item for manipulation
+        function selectPlacedItem(element) {
+            // Deselect previous item
+            if (selectedPlacedItem) {
+                selectedPlacedItem.style.border = 'none';
+            }
+            
+            // Select new item
+            selectedPlacedItem = element;
+            selectedPlacedItem.style.border = '2px solid #34C759';
+            
+            // Show controls
+            itemControls.style.display = 'flex';
+            updateControlButtons();
+            
+            // Bring selected item to front
+            selectedPlacedItem.style.zIndex = '10';
+        }
+        
+        // Delete a placed item
+        function deletePlacedItem(id, type) {
+            // Remove from DOM
+            const element = document.getElementById(id);
+            if (element) {
+                element.remove();
+            }
+            
+            // Remove from tracking
+            if (type === 'laptop') {
+                placedItems.laptop = placedItems.laptop.filter(item => item.id !== id);
+            } else {
+                placedItems.other = placedItems.other.filter(item => item.id !== id);
+            }
+            
+            // Reset selection if this was the selected item
+            if (selectedPlacedItem && selectedPlacedItem.id === id) {
+                selectedPlacedItem = null;
+                itemControls.style.display = 'none';
             }
         }
         
-        // Show status message
-        function showStatusMessage(message, duration = 3000) {
-            statusMessage.textContent = message;
-            statusMessage.classList.add('visible');
+        // Update control buttons based on current mode
+        function updateControlButtons() {
+            if (interactionMode === 'move') {
+                moveButton.classList.add('active');
+                rotateButton.classList.remove('active');
+            } else {
+                rotateButton.classList.add('active');
+                moveButton.classList.remove('active');
+            }
+        }
+        
+        // Switch to other items tray
+        function switchToOtherItemsTray() {
+            // Clear all existing placed items from view
+            placedItems.laptop.forEach(item => {
+                if (item.element) {
+                    item.element.style.display = 'none';
+                }
+            });
+            
+            currentTrayMode = 'other';
+            updateItemSelection();
+            doneButton.style.display = 'block';
+            showFeedback('Now place your other items in the new tray');
+        }
+        
+        // Show feedback message
+        function showFeedback(message, isSuccess = true) {
+            feedbackMessage.textContent = message;
+            feedbackMessage.style.backgroundColor = isSuccess ? 
+                'rgba(52, 199, 89, 0.9)' : 'rgba(255, 59, 48, 0.9)';
+            
+            feedbackMessage.classList.add('visible');
             
             setTimeout(() => {
-                statusMessage.classList.remove('visible');
-            }, duration);
+                feedbackMessage.classList.remove('visible');
+            }, 3000);
         }
+        
+        // Reset the experience
+        function resetExperience() {
+            // Clear all placed items
+            placedItems.laptop.forEach(item => {
+                if (item.element) {
+                    item.element.remove();
+                }
+            });
+            
+            placedItems.other.forEach(item => {
+                if (item.element) {
+                    item.element.remove();
+                }
+            });
+            
+            // Reset data
+            currentTrayMode = 'laptop';
+            placedItems = {
+                laptop: [],
+                other: []
+            };
+            selectedItem = null;
+            selectedPlacedItem = null;
+            placedItemId = 0;
+            
+            // Reset UI
+            completeMessage.style.display = 'none';
+            itemControls.style.display = 'none';
+            
+            // Exit AR if active
+            if (arActive) {
+                arViewer.exitAR();
+            }
+            
+            // Return to start screen
+            initialInstruction.style.display = 'block';
+            arScene.style.display = 'none';
+            instructionsPanel.style.display = 'none';
+            itemSelection.style.display = 'none';
+            trayMode.style.display = 'none';
+            progressButton.style.display = 'none';
+            doneButton.style.display = 'none';
+        }
+        
+        // Initialize the app
+        window.addEventListener('load', initializeApp);
     </script>
 </body>
 </html>
