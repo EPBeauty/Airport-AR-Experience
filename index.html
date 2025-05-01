@@ -4,19 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Airport Security AR</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <script type="module" src="https://unpkg.com/three@0.132.2/build/three.module.js"></script>
+    <script type="module" src="https://unpkg.com/three@0.132.2/examples/jsm/loaders/GLTFLoader.js"></script>
+    <script type="module" src="https://unpkg.com/three@0.132.2/examples/jsm/webxr/ARButton.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body {
-            font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f5f5f5;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
         }
         
-        model-viewer {
+        #scene-container {
+            position: absolute;
             width: 100%;
-            height: 85vh;
+            height: 100%;
+            overflow: hidden;
         }
         
         .tray-info {
@@ -32,15 +35,15 @@
         }
         
         .button-bar {
-            display: flex;
-            justify-content: space-around;
-            padding: 15px;
-            background-color: white;
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
+            display: flex;
+            padding: 15px;
+            background: white;
             border-top: 1px solid #ddd;
+            z-index: 100;
         }
         
         .nav-button {
@@ -59,64 +62,668 @@
             background-color: #77ca64;
             color: white;
         }
+        
+        .ar-button {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 80px;
+            padding: 15px 30px;
+            background-color: #77ca64;
+            color: white;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            z-index: 100;
+            text-transform: uppercase;
+        }
+        
+        .items-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .item-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            text-align: left;
+        }
+        
+        .item-button:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .panel-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 101;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        #message {
+            position: absolute;
+            bottom: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        #message.visible {
+            opacity: 1;
+        }
+        
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            font-size: 18px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #77ca64;
+            border-radius: 50%;
+            margin-bottom: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .position-controls {
+            display: none;
+            position: absolute;
+            bottom: 150px;
+            right: 20px;
+            z-index: 100;
+            background-color: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .position-controls.visible {
+            display: block;
+        }
+        
+        .control-button {
+            width: 40px;
+            height: 40px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        
+        .control-button:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="tray-info" id="trayInfo">Laptop Tray</div>
-    
-    <model-viewer 
-        id="arViewer"
-        src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-        camera-controls
-        ar
-        ar-modes="webxr scene-viewer quick-look"
-        shadow-intensity="1"
-        ar-scale="fixed"
-        auto-rotate>
-    </model-viewer>
-    
-    <div class="button-bar">
-        <button class="nav-button active" id="laptopButton">Laptop</button>
-        <button class="nav-button" id="otherButton">Other Items</button>
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div>Loading 3D models...</div>
     </div>
     
-    <script>
-        // DOM Elements
-        const arViewer = document.getElementById('arViewer');
-        const trayInfo = document.getElementById('trayInfo');
-        const laptopButton = document.getElementById('laptopButton');
-        const otherButton = document.getElementById('otherButton');
+    <div id="scene-container"></div>
+    <div class="tray-info" id="trayInfo">Laptop Tray</div>
+    <div id="message"></div>
+    
+    <button id="arButton" class="ar-button">VIEW IN YOUR SPACE</button>
+    
+    <div class="panel-toggle" id="panelToggle">+</div>
+    
+    <div class="items-panel" id="itemsPanel">
+        <h3 id="panelTitle">Add Items</h3>
+        <div id="laptopPanel">
+            <button class="item-button" data-item="laptop">Laptop</button>
+        </div>
+        <div id="otherPanel" style="display: none;">
+            <button class="item-button" data-item="phone">Phone</button>
+            <button class="item-button" data-item="charger">Charger</button>
+            <button class="item-button" data-item="keys">Keys</button>
+            <button class="item-button" data-item="bag">Bag</button>
+            <button class="item-button" data-item="hat">Hat</button>
+        </div>
+    </div>
+    
+    <div class="position-controls" id="positionControls">
+        <div class="control-grid">
+            <button class="control-button" data-action="moveLeft">←</button>
+            <button class="control-button" data-action="moveUp">↑</button>
+            <button class="control-button" data-action="moveRight">→</button>
+            <button class="control-button" data-action="rotateLeft">⟲</button>
+            <button class="control-button" data-action="moveDown">↓</button>
+            <button class="control-button" data-action="rotateRight">⟳</button>
+        </div>
+        <button class="control-button" style="width: 100%;" data-action="delete">Remove</button>
+    </div>
+    
+    <div class="button-bar">
+        <button class="nav-button active" id="laptopBtn">Laptop</button>
+        <button class="nav-button" id="otherBtn">Other Items</button>
+    </div>
+    
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.132.2/build/three.module.js';
+        import { GLTFLoader } from 'https://unpkg.com/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
+        import { ARButton } from 'https://unpkg.com/three@0.132.2/examples/jsm/webxr/ARButton.js';
         
-        // Available 3D models
-        const models = {
-            laptop: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
-            other: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+        // DOM Elements
+        const container = document.getElementById('scene-container');
+        const trayInfo = document.getElementById('trayInfo');
+        const laptopBtn = document.getElementById('laptopBtn');
+        const otherBtn = document.getElementById('otherBtn');
+        const arButton = document.getElementById('arButton');
+        const panelToggle = document.getElementById('panelToggle');
+        const itemsPanel = document.getElementById('itemsPanel');
+        const laptopPanel = document.getElementById('laptopPanel');
+        const otherPanel = document.getElementById('otherPanel');
+        const positionControls = document.getElementById('positionControls');
+        const messageEl = document.getElementById('message');
+        const loader = document.getElementById('loader');
+        
+        // Scene variables
+        let camera, scene, renderer;
+        let controller;
+        let reticle;
+        let hitTestSource = null;
+        let hitTestSourceRequested = false;
+        let isInAR = false;
+        
+        // Item tracking
+        let currentMode = 'laptop';
+        let placedItems = [];
+        let selectedItem = null;
+        let modelsLoaded = false;
+        let loadedModels = {};
+        
+        // Model specs
+        const modelSpecs = {
+            laptop: { 
+                path: 'laptop.glb', 
+                scale: 0.5, 
+                position: new THREE.Vector3(0, 0.02, -0.3),
+                rotation: new THREE.Euler(0, 0, 0)
+            },
+            phone: { 
+                path: 'phone.glb', 
+                scale: 0.3, 
+                position: new THREE.Vector3(0.1, 0.01, -0.2),
+                rotation: new THREE.Euler(0, 0, 0)
+            },
+            charger: { 
+                path: 'charger.glb', 
+                scale: 0.2, 
+                position: new THREE.Vector3(-0.1, 0.01, -0.1),
+                rotation: new THREE.Euler(0, 0, 0)
+            },
+            keys: { 
+                path: 'keys.glb', 
+                scale: 0.15, 
+                position: new THREE.Vector3(0.15, 0.01, -0.1),
+                rotation: new THREE.Euler(0, 0, 0)
+            },
+            bag: { 
+                path: 'bag.glb', 
+                scale: 0.4, 
+                position: new THREE.Vector3(-0.15, 0.02, -0.25),
+                rotation: new THREE.Euler(0, 0, 0)
+            },
+            hat: { 
+                path: 'hat.glb', 
+                scale: 0.25, 
+                position: new THREE.Vector3(0, 0.01, -0.1),
+                rotation: new THREE.Euler(0, 0, 0)
+            }
         };
         
-        // Handle button clicks
-        laptopButton.addEventListener('click', () => {
-            switchMode('laptop');
-        });
+        // Initialize
+        init();
         
-        otherButton.addEventListener('click', () => {
-            switchMode('other');
-        });
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            
+            // Create camera
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+            
+            // Create lights
+            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+            light.position.set(0.5, 1, 0.25);
+            scene.add(light);
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+            container.appendChild(renderer.domElement);
+            
+            // Preload models
+            preloadModels();
+            
+            // Create AR button
+            arButton.addEventListener('click', activateAR);
+            
+            // Setup button listeners
+            setupButtonListeners();
+            
+            // Create a reticle for placing objects
+            createReticle();
+            
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize);
+            
+            // Start animation loop
+            renderer.setAnimationLoop(render);
+        }
         
-        // Switch between modes
+        function preloadModels() {
+            const loader = new GLTFLoader();
+            let modelsToLoad = Object.keys(modelSpecs).length;
+            let modelsLoaded = 0;
+            
+            Object.keys(modelSpecs).forEach(itemType => {
+                const spec = modelSpecs[itemType];
+                
+                try {
+                    loader.load(spec.path, (gltf) => {
+                        loadedModels[itemType] = gltf.scene;
+                        
+                        // Scale the model
+                        loadedModels[itemType].scale.set(spec.scale, spec.scale, spec.scale);
+                        
+                        modelsLoaded++;
+                        if (modelsLoaded >= modelsToLoad) {
+                            modelsLoaded = true;
+                            showMessage('Models loaded successfully');
+                            document.getElementById('loader').style.display = 'none';
+                        }
+                    }, undefined, (error) => {
+                        console.error(`Error loading ${itemType} model:`, error);
+                        showMessage(`Error loading ${itemType} model`);
+                        
+                        // Continue with other models
+                        modelsLoaded++;
+                        if (modelsLoaded >= modelsToLoad) {
+                            modelsLoaded = true;
+                            document.getElementById('loader').style.display = 'none';
+                        }
+                    });
+                } catch (e) {
+                    console.error(`Failed to load model ${itemType}:`, e);
+                    modelsLoaded++;
+                    if (modelsLoaded >= modelsToLoad) {
+                        modelsLoaded = true;
+                        document.getElementById('loader').style.display = 'none';
+                    }
+                }
+            });
+            
+            // Timeout for loading all models
+            setTimeout(() => {
+                document.getElementById('loader').style.display = 'none';
+            }, 10000); // 10 seconds max loading time
+        }
+        
+        function setupButtonListeners() {
+            // Mode navigation buttons
+            laptopBtn.addEventListener('click', () => switchMode('laptop'));
+            otherBtn.addEventListener('click', () => switchMode('other'));
+            
+            // Panel toggle
+            panelToggle.addEventListener('click', () => {
+                itemsPanel.style.display = itemsPanel.style.display === 'block' ? 'none' : 'block';
+                panelToggle.textContent = itemsPanel.style.display === 'block' ? '×' : '+';
+            });
+            
+            // Item buttons
+            const itemButtons = document.querySelectorAll('.item-button');
+            itemButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const itemType = button.getAttribute('data-item');
+                    if (currentMode === 'laptop') {
+                        // Only one laptop in laptop mode
+                        clearScene();
+                        addItem(itemType);
+                    } else {
+                        // Multiple items in other mode
+                        addItem(itemType);
+                    }
+                    
+                    itemsPanel.style.display = 'none';
+                    panelToggle.textContent = '+';
+                });
+            });
+            
+            // Position control buttons
+            const controlButtons = document.querySelectorAll('.control-button');
+            controlButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const action = button.getAttribute('data-action');
+                    if (!selectedItem) return;
+                    
+                    switch(action) {
+                        case 'moveLeft':
+                            selectedItem.position.x -= 0.05;
+                            break;
+                        case 'moveRight':
+                            selectedItem.position.x += 0.05;
+                            break;
+                        case 'moveUp':
+                            selectedItem.position.z -= 0.05;
+                            break;
+                        case 'moveDown':
+                            selectedItem.position.z += 0.05;
+                            break;
+                        case 'rotateLeft':
+                            selectedItem.rotation.y -= Math.PI / 6;
+                            break;
+                        case 'rotateRight':
+                            selectedItem.rotation.y += Math.PI / 6;
+                            break;
+                        case 'delete':
+                            removeItem(selectedItem);
+                            break;
+                    }
+                });
+            });
+        }
+        
+        function createReticle() {
+            // Create a reticle geometry
+            const geometry = new THREE.RingGeometry(0.03, 0.04, 32).rotateX(-Math.PI / 2);
+            const material = new THREE.MeshBasicMaterial();
+            reticle = new THREE.Mesh(geometry, material);
+            reticle.matrixAutoUpdate = false;
+            reticle.visible = false;
+            scene.add(reticle);
+        }
+        
+        function activateAR() {
+            // Request AR session
+            navigator.xr.requestSession('immersive-ar', {
+                requiredFeatures: ['hit-test']
+            }).then(onSessionStarted).catch(error => {
+                console.error('AR session request failed:', error);
+                showMessage('AR not supported on this device');
+            });
+        }
+        
+        function onSessionStarted(session) {
+            session.addEventListener('end', onSessionEnded);
+            
+            renderer.xr.setReferenceSpaceType('local');
+            renderer.xr.setSession(session);
+            
+            isInAR = true;
+            
+            // Set up hit testing
+            hitTestSourceRequested = false;
+            
+            session.addEventListener('select', onSelect);
+            
+            showMessage('AR session started. Tap to place items.');
+        }
+        
+        function onSessionEnded() {
+            isInAR = false;
+            hitTestSourceRequested = false;
+            hitTestSource = null;
+            
+            showMessage('AR session ended');
+        }
+        
+        function onSelect() {
+            if (reticle.visible) {
+                // Place the currently selected item
+                if (currentMode === 'laptop') {
+                    clearScene();
+                    addItemAtReticle('laptop');
+                } else if (currentMode === 'other') {
+                    // For demo purposes, add a random item from the 'other' category
+                    const otherItems = ['phone', 'charger', 'keys', 'bag', 'hat'];
+                    const randomItem = otherItems[Math.floor(Math.random() * otherItems.length)];
+                    addItemAtReticle(randomItem);
+                }
+            }
+        }
+        
+        function addItemAtReticle(itemType) {
+            if (!loadedModels[itemType]) {
+                showMessage(`Model ${itemType} not loaded`);
+                return;
+            }
+            
+            // Clone the model
+            const model = loadedModels[itemType].clone();
+            
+            // Position it at the reticle
+            model.position.setFromMatrixPosition(reticle.matrix);
+            model.position.y += 0.01; // Slightly above the floor
+            
+            // Add item data
+            model.userData = {
+                type: itemType
+            };
+            
+            // Add to scene
+            scene.add(model);
+            
+            // Track the placed item
+            placedItems.push(model);
+            
+            // Select the newly placed item
+            selectItem(model);
+            
+            showMessage(`Placed ${itemType}`);
+        }
+        
+        function addItem(itemType) {
+            if (!loadedModels[itemType]) {
+                showMessage(`Model ${itemType} not loaded`);
+                return;
+            }
+            
+            // Clone the model
+            const model = loadedModels[itemType].clone();
+            
+            // Use default position for non-AR view
+            const spec = modelSpecs[itemType];
+            model.position.copy(spec.position);
+            model.rotation.copy(spec.rotation);
+            
+            // Add item data
+            model.userData = {
+                type: itemType
+            };
+            
+            // Add to scene
+            scene.add(model);
+            
+            // Track the placed item
+            placedItems.push(model);
+            
+            // Select the newly placed item
+            selectItem(model);
+            
+            showMessage(`Added ${itemType}`);
+        }
+        
+        function selectItem(item) {
+            // Deselect previously selected item
+            if (selectedItem) {
+                // Remove highlight from previous item
+            }
+            
+            selectedItem = item;
+            
+            // Show position controls
+            positionControls.classList.add('visible');
+            
+            showMessage(`Selected ${item.userData.type}`);
+        }
+        
+        function removeItem(item) {
+            // Remove from scene
+            scene.remove(item);
+            
+            // Remove from tracking
+            placedItems = placedItems.filter(i => i !== item);
+            
+            if (selectedItem === item) {
+                selectedItem = null;
+                positionControls.classList.remove('visible');
+            }
+            
+            showMessage(`Removed ${item.userData.type}`);
+        }
+        
+        function clearScene() {
+            // Remove all placed items
+            placedItems.forEach(item => {
+                scene.remove(item);
+            });
+            
+            placedItems = [];
+            selectedItem = null;
+            
+            positionControls.classList.remove('visible');
+        }
+        
         function switchMode(mode) {
-            // Update UI
-            laptopButton.classList.remove('active');
-            otherButton.classList.remove('active');
+            currentMode = mode;
             
             if (mode === 'laptop') {
-                laptopButton.classList.add('active');
+                laptopBtn.classList.add('active');
+                otherBtn.classList.remove('active');
                 trayInfo.textContent = 'Laptop Tray';
-                arViewer.src = models.laptop;
+                
+                laptopPanel.style.display = 'block';
+                otherPanel.style.display = 'none';
+                
+                // Clear scene and add a laptop
+                clearScene();
+                if (!isInAR) {
+                    addItem('laptop');
+                }
             } else {
-                otherButton.classList.add('active');
+                otherBtn.classList.add('active');
+                laptopBtn.classList.remove('active');
                 trayInfo.textContent = 'Other Items Tray';
-                arViewer.src = models.other;
+                
+                laptopPanel.style.display = 'none';
+                otherPanel.style.display = 'block';
+                
+                // Clear scene
+                clearScene();
             }
+        }
+        
+        function showMessage(text, duration = 3000) {
+            messageEl.textContent = text;
+            messageEl.classList.add('visible');
+            
+            setTimeout(() => {
+                messageEl.classList.remove('visible');
+            }, duration);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        function render(timestamp, frame) {
+            if (frame) {
+                const referenceSpace = renderer.xr.getReferenceSpace();
+                const session = renderer.xr.getSession();
+                
+                if (hitTestSourceRequested === false) {
+                    session.requestReferenceSpace('viewer').then(function(referenceSpace) {
+                        session.requestHitTestSource({ space: referenceSpace }).then(function(source) {
+                            hitTestSource = source;
+                        });
+                    });
+                    
+                    session.addEventListener('end', function() {
+                        hitTestSourceRequested = false;
+                        hitTestSource = null;
+                    });
+                    
+                    hitTestSourceRequested = true;
+                }
+                
+                if (hitTestSource) {
+                    const hitTestResults = frame.getHitTestResults(hitTestSource);
+                    
+                    if (hitTestResults.length) {
+                        const hit = hitTestResults[0];
+                        reticle.visible = true;
+                        reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
+                    } else {
+                        reticle.visible = false;
+                    }
+                }
+            }
+            
+            renderer.render(scene, camera);
         }
     </script>
 </body>
