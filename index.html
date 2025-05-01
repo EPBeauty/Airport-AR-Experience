@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enhanced Airport Security AR Guide</title>
-    <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
-    <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+    <title>Simple Camera Airport Security Guide</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         :root {
             --primary-green: #34C759;
-            --light-gray: #D9D9D9;
+            --light-gray: #F5F5F5;
             --black: #000000;
             --white: #FFFFFF;
+            --laptop-color: #3498db;
+            --other-color: #e74c3c;
         }
         
         * {
@@ -34,38 +34,52 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
+            background-color: var(--light-gray);
         }
         
-        .ar-scene {
-            width: 100%;
-            height: 100vh;
-            background-color: transparent;
-            position: relative;
-        }
-        
-        model-viewer {
-            width: 100%;
-            height: 100vh;
-            background-color: transparent;
-            --poster-color: transparent;
-        }
-        
-        .ar-button {
-            background-color: var(--primary-green);
-            color: var(--white);
-            border-radius: 8px;
-            border: none;
+        #camera-view {
             position: absolute;
-            left: 50%;
-            bottom: 50px;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            object-fit: cover;
+            z-index: 1;
+            background-color: #000;
+            display: none;
+        }
+        
+        .camera-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .item-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .item-placed {
+            position: absolute;
+            pointer-events: auto;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             z-index: 10;
+            cursor: move;
         }
         
         .instructions-panel {
@@ -106,7 +120,7 @@
             flex-wrap: wrap;
             gap: 10px;
             padding: 10px;
-            z-index: 10;
+            z-index: 100;
             background-color: rgba(255, 255, 255, 0.7);
             border-top-left-radius: 15px;
             border-top-right-radius: 15px;
@@ -134,9 +148,16 @@
             border: 2px solid var(--primary-green);
         }
         
-        .item-button model-viewer {
-            width: 100%;
+        .item-thumbnail {
+            width: 60px;
             height: 60px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
         }
         
         .item-button span {
@@ -334,20 +355,6 @@
             color: var(--white);
         }
         
-        .item-placed {
-            position: absolute;
-            pointer-events: auto;
-            touch-action: none;
-            transform-origin: center;
-            z-index: 5;
-        }
-        
-        .item-placed model-viewer {
-            width: 100%;
-            height: 100%;
-            --poster-color: transparent;
-        }
-        
         .done-button {
             position: absolute;
             bottom: 120px;
@@ -372,16 +379,62 @@
             right: -10px;
             width: 24px;
             height: 24px;
-            background-color: red;
+            background-color: #FF3B30;
             color: white;
             border: none;
             border-radius: 50%;
             font-weight: bold;
+            font-size: 14px;
             z-index: 101;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+        }
+        
+        .camera-error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 120;
+            display: none;
+        }
+        
+        .camera-error h2 {
+            color: #FF3B30;
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        .retry-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 15px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            bottom: -10px;
+            right: -10px;
+            cursor: se-resize;
+            z-index: 102;
         }
     </style>
 </head>
@@ -390,12 +443,23 @@
         <h2>Airport Security Check</h2>
         <p>Place a physical security tray in front of you.</p>
         <p>You'll use your camera to place virtual items in your real tray.</p>
-        <button class="start-button" id="startButton">Start AR Experience</button>
+        <button class="start-button" id="startButton">Start Camera Experience</button>
+    </div>
+    
+    <div class="camera-error" id="cameraError">
+        <h2>Camera Access Error</h2>
+        <p>We couldn't access your camera. Please ensure you've granted camera permissions and try again.</p>
+        <button class="retry-button" id="retryButton">Try Again</button>
+    </div>
+    
+    <div class="camera-container" id="cameraContainer">
+        <video id="camera-view" autoplay playsinline></video>
+        <div class="item-overlay" id="itemOverlay"></div>
     </div>
     
     <div class="instructions-panel" style="display: none;" id="instructionsPanel">
         <h2>Select and Place Items</h2>
-        <p>Tap items below, then place them in your tray. Move and rotate by dragging.</p>
+        <p>Tap items below, then tap on screen to place them in your tray.</p>
     </div>
     
     <div class="tray-mode" id="trayMode" style="display: none;">
@@ -424,27 +488,13 @@
         Done Placing Items
     </button>
     
-    <div class="item-controls" id="itemControls">
+    <div class="item-controls" id="itemControls" style="display: none;">
+        <button class="control-button active" id="moveButton">↕</button>
         <button class="control-button" id="rotateButton">↻</button>
-        <button class="control-button" id="moveButton">↕</button>
     </div>
     
     <div class="item-selection" id="itemSelection" style="display: none;">
         <!-- Item buttons will be added here -->
-    </div>
-    
-    <div class="ar-scene" id="arScene" style="display: none;">
-        <model-viewer 
-            id="arViewer"
-            camera-controls
-            ar
-            ar-modes="webxr scene-viewer quick-look"
-            ar-scale="fixed"
-            ar-placement="floor"
-            interaction-prompt="none"
-            shadow-intensity="1"
-            environment-image="neutral">
-        </model-viewer>
     </div>
     
     <script>
@@ -454,62 +504,56 @@
                 id: 'laptop', 
                 name: 'Laptop', 
                 type: 'laptop', 
-                model: 'laptop.glb', 
-                scale: '0.5 0.5 0.5',  // Real-world scale for AR
-                width: 150,
-                height: 100
+                color: '#3498db',
+                width: 200,
+                height: 120
             },
             { 
                 id: 'phone', 
                 name: 'Phone', 
                 type: 'other', 
-                model: 'phone.glb', 
-                scale: '0.3 0.3 0.3',  // Real-world scale for AR (smaller than laptop)
-                width: 60,
-                height: 120
+                color: '#e74c3c',
+                width: 40,
+                height: 80
             },
             { 
                 id: 'charger', 
                 name: 'Charger', 
                 type: 'other', 
-                model: 'charger.glb', 
-                scale: '0.3 0.3 0.3',  // Real-world scale for AR
-                width: 80,
-                height: 60
+                color: '#e67e22',
+                width: 60,
+                height: 40
             },
             { 
                 id: 'bag', 
                 name: 'Bag', 
                 type: 'other', 
-                model: 'bag.glb', 
-                scale: '0.6 0.6 0.6',  // Real-world scale for AR (larger than phone)
-                width: 140,
-                height: 120
+                color: '#9b59b6',
+                width: 120,
+                height: 100
             },
             { 
                 id: 'hat', 
                 name: 'Hat', 
                 type: 'other', 
-                model: 'hat.glb', 
-                scale: '0.4 0.4 0.4',  // Real-world scale for AR (medium size)
-                width: 100,
-                height: 60
+                color: '#2ecc71',
+                width: 80,
+                height: 40
             },
             { 
                 id: 'keys', 
                 name: 'Keys', 
                 type: 'other', 
-                model: 'keys.glb', 
-                scale: '0.25 0.25 0.25',  // Real-world scale for AR (smaller than phone)
-                width: 60,
-                height: 40
+                color: '#f1c40f',
+                width: 40,
+                height: 30
             }
         ];
         
         // Track current tray mode
         let currentTrayMode = 'laptop'; // Start with laptop tray
         
-        // Track items placed in AR
+        // Track items placed on screen
         let placedItems = {
             laptop: [],
             other: []
@@ -524,18 +568,19 @@
         // Track interaction mode (move or rotate)
         let interactionMode = 'move';
         
-        // Track AR session state
-        let arActive = false;
-        
         // Track unique ID for placed items
         let placedItemId = 0;
+        
+        // Track camera state
+        let cameraActive = false;
         
         // DOM Elements
         const initialInstruction = document.getElementById('initialInstruction');
         const instructionsPanel = document.getElementById('instructionsPanel');
         const itemSelection = document.getElementById('itemSelection');
-        const arViewer = document.getElementById('arViewer');
-        const arScene = document.getElementById('arScene');
+        const cameraContainer = document.getElementById('cameraContainer');
+        const cameraView = document.getElementById('camera-view');
+        const itemOverlay = document.getElementById('itemOverlay');
         const feedbackMessage = document.getElementById('feedbackMessage');
         const progressButton = document.getElementById('progressButton');
         const doneButton = document.getElementById('doneButton');
@@ -548,12 +593,22 @@
         const itemControls = document.getElementById('itemControls');
         const rotateButton = document.getElementById('rotateButton');
         const moveButton = document.getElementById('moveButton');
+        const cameraError = document.getElementById('cameraError');
+        const retryButton = document.getElementById('retryButton');
         
         // Initialize event listeners
         function initializeApp() {
-            // Start AR button
+            console.log("Initializing app");
+            
+            // Start button
             startButton.addEventListener('click', () => {
-                startARExperience();
+                startCameraExperience();
+            });
+            
+            // Retry button
+            retryButton.addEventListener('click', () => {
+                cameraError.style.display = 'none';
+                startCameraExperience();
             });
             
             // Progress button (to move to next tray)
@@ -597,53 +652,56 @@
                 updateControlButtons();
             });
             
-            // AR status change
-            arViewer.addEventListener('ar-status', (event) => {
-                if (event.detail.status === 'session-started') {
-                    console.log('AR session started');
-                    arActive = true;
-                    
-                    // Show UI elements needed during AR
-                    instructionsPanel.style.display = 'block';
-                    itemSelection.style.display = 'flex';
-                    trayMode.style.display = 'block';
-                    doneButton.style.display = 'block';
-                    
-                    // Initialize items for selection
-                    updateItemSelection();
-                } else if (event.detail.status === 'not-presenting') {
-                    console.log('AR session ended');
-                    arActive = false;
-                } else if (event.detail.status === 'failed') {
-                    console.log('AR session failed');
-                    showFeedback('AR failed to start. Please try again.', false);
+            // Click on item overlay to place items
+            itemOverlay.addEventListener('click', (event) => {
+                if (selectedItem) {
+                    placeSelectedItem(event);
                 }
             });
         }
         
-        // Start the AR experience
-        function startARExperience() {
+        // Start the camera experience
+        function startCameraExperience() {
+            console.log("Starting camera experience");
+            
             // Hide initial instruction
             initialInstruction.style.display = 'none';
             
-            // Show AR viewer
-            arScene.style.display = 'block';
-            
-            // Start AR mode by clicking AR button
-            setTimeout(() => {
-                // Find and click the AR button to activate camera
-                const arButton = document.querySelector('button[slot="ar-button"]');
-                if (arButton) {
-                    arButton.click();
-                } else {
-                    // Fallback if button not found
-                    arViewer.activateAR();
-                }
-            }, 100);
+            // Access user's camera
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                    .then(function(stream) {
+                        // Set camera stream as video source
+                        cameraView.srcObject = stream;
+                        cameraActive = true;
+                        
+                        // Show camera view and UI
+                        cameraContainer.style.display = 'block';
+                        cameraView.style.display = 'block';
+                        instructionsPanel.style.display = 'block';
+                        itemSelection.style.display = 'flex';
+                        trayMode.style.display = 'block';
+                        doneButton.style.display = 'block';
+                        
+                        // Initialize items for selection
+                        updateItemSelection();
+                        
+                        showFeedback('Camera active. Point at your tray and select items to place.');
+                    })
+                    .catch(function(error) {
+                        console.error("Camera error:", error);
+                        cameraError.style.display = 'block';
+                    });
+            } else {
+                console.error("getUserMedia not supported");
+                cameraError.style.display = 'block';
+            }
         }
         
         // Update available items based on current tray mode
         function updateItemSelection() {
+            console.log("Updating item selection for mode:", currentTrayMode);
+            
             // Clear current items
             itemSelection.innerHTML = '';
             
@@ -663,19 +721,17 @@
                 button.className = 'item-button';
                 button.setAttribute('data-id', item.id);
                 
-                // Thumbnail image (model-viewer for preview)
-                const modelViewer = document.createElement('model-viewer');
-                modelViewer.src = item.model;
-                modelViewer.setAttribute('auto-rotate', 'true');
-                modelViewer.setAttribute('camera-controls', 'false');
-                modelViewer.setAttribute('ar', 'false');
-                modelViewer.setAttribute('shadow-intensity', '1');
+                // Create colored thumbnail div
+                const thumbnail = document.createElement('div');
+                thumbnail.className = 'item-thumbnail';
+                thumbnail.style.backgroundColor = item.color;
+                thumbnail.textContent = item.name;
                 
                 // Label
                 const label = document.createElement('span');
                 label.textContent = item.name;
                 
-                button.appendChild(modelViewer);
+                button.appendChild(thumbnail);
                 button.appendChild(label);
                 
                 // Add click event to select item
@@ -689,6 +745,8 @@
         
         // Select an item for placement
         function selectItemForPlacement(item) {
+            console.log("Selected item for placement:", item.name);
+            
             // Update selected item
             selectedItem = item;
             
@@ -703,22 +761,14 @@
             });
             
             // Show feedback to the user
-            showFeedback(`Tap in your tray to place the ${item.name}`);
-            
-            // Setup the AR scene for placement
-            arViewer.src = item.model;
-            arViewer.setAttribute('scale', item.scale);
-            
-            // Add click event to AR viewer for placement
-            arViewer.addEventListener('click', placeSelectedItem);
+            showFeedback(`Tap on the screen to place the ${item.name} in your tray`);
         }
         
-        // Place the selected item in the AR scene
+        // Place the selected item in the tray
         function placeSelectedItem(event) {
             if (!selectedItem) return;
             
-            // Remove event listener to prevent multiple placements
-            arViewer.removeEventListener('click', placeSelectedItem);
+            console.log("Placing item:", selectedItem.name);
             
             // Create a unique ID for this placed item
             const uniqueId = `item-${selectedItem.id}-${placedItemId++}`;
@@ -729,22 +779,19 @@
             placedItemElement.id = uniqueId;
             placedItemElement.style.width = `${selectedItem.width}px`;
             placedItemElement.style.height = `${selectedItem.height}px`;
+            placedItemElement.style.backgroundColor = selectedItem.color;
+            placedItemElement.textContent = selectedItem.name;
             
             // Position at tap location
-            const rect = arViewer.getBoundingClientRect();
+            const rect = event.currentTarget.getBoundingClientRect();
             const x = event.clientX - rect.left - (selectedItem.width / 2);
             const y = event.clientY - rect.top - (selectedItem.height / 2);
-            placedItemElement.style.left = `${x}px`;
-            placedItemElement.style.top = `${y}px`;
             
-            // Create model-viewer element for the placed item
-            const modelViewer = document.createElement('model-viewer');
-            modelViewer.src = selectedItem.model;
-            modelViewer.setAttribute('camera-controls', 'false');
-            modelViewer.setAttribute('ar', 'false');
-            modelViewer.setAttribute('shadow-intensity', '1');
-            modelViewer.setAttribute('scale', selectedItem.scale);
-            modelViewer.style.pointerEvents = 'none';
+            // Ensure position is valid
+            placedItemElement.style.left = `${Math.max(0, Math.min(x, rect.width - selectedItem.width))}px`;
+            placedItemElement.style.top = `${Math.max(0, Math.min(y, rect.height - selectedItem.height))}px`;
+            placedItemElement.style.position = 'absolute';
+            placedItemElement.style.transform = 'rotate(0deg)';
             
             // Create delete button
             const deleteButton = document.createElement('button');
@@ -755,15 +802,19 @@
                 deletePlacedItem(uniqueId, selectedItem.type);
             });
             
-            // Add to placed item element
-            placedItemElement.appendChild(modelViewer);
-            placedItemElement.appendChild(deleteButton);
+            // Create resize handle
+            const resizeHandle = document.createElement('div');
+            resizeHandle.className = 'resize-handle';
             
-            // Add to AR scene
-            arScene.appendChild(placedItemElement);
+            // Add delete button and resize handle to the item
+            placedItemElement.appendChild(deleteButton);
+            placedItemElement.appendChild(resizeHandle);
+            
+            // Add to overlay
+            itemOverlay.appendChild(placedItemElement);
             
             // Setup interaction handlers
-            setupItemInteraction(placedItemElement);
+            setupItemInteraction(placedItemElement, resizeHandle);
             
             // Record placed item
             const placedItem = {
@@ -783,7 +834,6 @@
             showFeedback(`${selectedItem.name} placed successfully! Tap and drag to position.`);
             
             // Reset for next placement
-            arViewer.src = '';
             selectedItem = null;
             
             // Update selection buttons
@@ -793,75 +843,290 @@
             });
         }
         
-        // Setup interaction for placed items (move, rotate)
-        function setupItemInteraction(element) {
-            // Touch/mouse events for selection
-            element.addEventListener('pointerdown', (e) => {
+        // Setup interaction for placed items (move, rotate, resize)
+        function setupItemInteraction(element, resizeHandle) {
+            console.log("Setting up interaction for:", element.id);
+            
+            // Variables to track state
+            let isDragging = false;
+            let isResizing = false;
+            let isRotating = false;
+            let startX, startY;
+            let startLeft, startTop;
+            let startWidth, startHeight;
+            let startRotation = 0;
+            
+            // Select the item on click
+            element.addEventListener('mousedown', (e) => {
                 e.stopPropagation();
                 selectPlacedItem(element);
+                
+                if (interactionMode === 'move') {
+                    startDrag(e);
+                } else if (interactionMode === 'rotate') {
+                    startRotate(e);
+                }
             });
             
-            // Setup Hammer.js for gestures
-            const hammer = new Hammer(element);
-            
-            // Pan for moving
-            hammer.on('pan', (e) => {
-                if (interactionMode !== 'move') return;
+            element.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                selectPlacedItem(element);
                 
-                const dx = e.deltaX;
-                const dy = e.deltaY;
-                
-                const currentLeft = parseInt(element.style.left) || 0;
-                const currentTop = parseInt(element.style.top) || 0;
-                
-                element.style.left = `${currentLeft + dx}px`;
-                element.style.top = `${currentTop + dy}px`;
-                
-                // Reset delta for next event
-                e.srcEvent.preventDefault();
+                if (interactionMode === 'move') {
+                    startDrag(e.touches[0]);
+                } else if (interactionMode === 'rotate') {
+                    startRotate(e.touches[0]);
+                }
             });
             
-            // Rotate gesture
-            hammer.on('panmove', (e) => {
-                if (interactionMode !== 'rotate') return;
+            // Setup resize handle
+            resizeHandle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                startResize(e);
+            });
+            
+            resizeHandle.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                startResize(e.touches[0]);
+            });
+            
+            // Start dragging the item
+            function startDrag(e) {
+                isDragging = true;
+                isRotating = false;
+                isResizing = false;
+                
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = parseInt(element.style.left) || 0;
+                startTop = parseInt(element.style.top) || 0;
+                
+                document.addEventListener('mousemove', moveDrag);
+                document.addEventListener('touchmove', touchMoveDrag);
+                document.addEventListener('mouseup', stopDrag);
+                document.addEventListener('touchend', stopDrag);
+                
+                e.preventDefault();
+            }
+            
+            // Start rotating the item
+            function startRotate(e) {
+                isRotating = true;
+                isDragging = false;
+                isResizing = false;
                 
                 const rect = element.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
                 
-                // Calculate angle based on touch position relative to center
-                const angle = Math.atan2(
-                    e.center.y - centerY,
-                    e.center.x - centerX
-                ) * (180 / Math.PI);
+                // Get current rotation
+                const transform = element.style.transform;
+                const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
+                startRotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
                 
-                // Apply rotation
+                // Calculate initial angle
+                const initialAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+                
+                document.addEventListener('mousemove', moveRotate);
+                document.addEventListener('touchmove', touchMoveRotate);
+                document.addEventListener('mouseup', stopRotate);
+                document.addEventListener('touchend', stopRotate);
+                
+                e.preventDefault();
+            }
+            
+            // Start resizing the item
+            function startResize(e) {
+                isResizing = true;
+                isDragging = false;
+                isRotating = false;
+                
+                startX = e.clientX;
+                startY = e.clientY;
+                startWidth = parseInt(element.style.width) || selectedItem.width;
+                startHeight = parseInt(element.style.height) || selectedItem.height;
+                
+                document.addEventListener('mousemove', moveResize);
+                document.addEventListener('touchmove', touchMoveResize);
+                document.addEventListener('mouseup', stopResize);
+                document.addEventListener('touchend', stopResize);
+                
+                e.preventDefault();
+            }
+            
+            // Move functions for mouse
+            function moveDrag(e) {
+                if (!isDragging) return;
+                
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                // Calculate new position
+                let newLeft = startLeft + dx;
+                let newTop = startTop + dy;
+                
+                // Ensure the item stays within screen bounds
+                const rect = itemOverlay.getBoundingClientRect();
+                const itemWidth = parseInt(element.style.width);
+                const itemHeight = parseInt(element.style.height);
+                
+                newLeft = Math.max(0, Math.min(newLeft, rect.width - itemWidth));
+                newTop = Math.max(0, Math.min(newTop, rect.height - itemHeight));
+                
+                element.style.left = `${newLeft}px`;
+                element.style.top = `${newTop}px`;
+                
+                e.preventDefault();
+            }
+            
+            function moveRotate(e) {
+                if (!isRotating) return;
+                
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                // Calculate angle based on mouse position relative to center
+                const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+                
                 element.style.transform = `rotate(${angle}deg)`;
-                e.srcEvent.preventDefault();
-            });
+                
+                e.preventDefault();
+            }
+            
+            function moveResize(e) {
+                if (!isResizing) return;
+                
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                
+                // Maintain aspect ratio
+                const aspectRatio = startWidth / startHeight;
+                let newWidth = Math.max(30, startWidth + dx);
+                let newHeight = Math.max(30, newWidth / aspectRatio);
+                
+                element.style.width = `${newWidth}px`;
+                element.style.height = `${newHeight}px`;
+                
+                e.preventDefault();
+            }
+            
+            // Touch event handlers
+            function touchMoveDrag(e) {
+                if (!isDragging || !e.touches[0]) return;
+                
+                const touch = e.touches[0];
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
+                
+                // Calculate new position
+                let newLeft = startLeft + dx;
+                let newTop = startTop + dy;
+                
+                // Ensure the item stays within screen bounds
+                const rect = itemOverlay.getBoundingClientRect();
+                const itemWidth = parseInt(element.style.width);
+                const itemHeight = parseInt(element.style.height);
+                
+                newLeft = Math.max(0, Math.min(newLeft, rect.width - itemWidth));
+                newTop = Math.max(0, Math.min(newTop, rect.height - itemHeight));
+                
+                element.style.left = `${newLeft}px`;
+                element.style.top = `${newTop}px`;
+                
+                e.preventDefault();
+            }
+            
+            function touchMoveRotate(e) {
+                if (!isRotating || !e.touches[0]) return;
+                
+                const touch = e.touches[0];
+                const rect = element.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                // Calculate angle based on touch position relative to center
+                const angle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX) * (180 / Math.PI);
+                
+                element.style.transform = `rotate(${angle}deg)`;
+                
+                e.preventDefault();
+            }
+            
+            function touchMoveResize(e) {
+                if (!isResizing || !e.touches[0]) return;
+                
+                const touch = e.touches[0];
+                const dx = touch.clientX - startX;
+                const dy = touch.clientY - startY;
+                
+                // Maintain aspect ratio
+                const aspectRatio = startWidth / startHeight;
+                let newWidth = Math.max(30, startWidth + dx);
+                let newHeight = Math.max(30, newWidth / aspectRatio);
+                
+                element.style.width = `${newWidth}px`;
+                element.style.height = `${newHeight}px`;
+                
+                e.preventDefault();
+            }
+            
+            // Stop functions
+            function stopDrag(e) {
+                if (isDragging) {
+                    isDragging = false;
+                    document.removeEventListener('mousemove', moveDrag);
+                    document.removeEventListener('touchmove', touchMoveDrag);
+                    document.removeEventListener('mouseup', stopDrag);
+                    document.removeEventListener('touchend', stopDrag);
+                }
+            }
+            
+            function stopRotate(e) {
+                if (isRotating) {
+                    isRotating = false;
+                    document.removeEventListener('mousemove', moveRotate);
+                    document.removeEventListener('touchmove', touchMoveRotate);
+                    document.removeEventListener('mouseup', stopRotate);
+                    document.removeEventListener('touchend', stopRotate);
+                }
+            }
+            
+            function stopResize(e) {
+                if (isResizing) {
+                    isResizing = false;
+                    document.removeEventListener('mousemove', moveResize);
+                    document.removeEventListener('touchmove', touchMoveResize);
+                    document.removeEventListener('mouseup', stopResize);
+                    document.removeEventListener('touchend', stopResize);
+                }
+            }
         }
         
         // Select a placed item for manipulation
         function selectPlacedItem(element) {
+            console.log("Selected placed item:", element.id);
+            
             // Deselect previous item
             if (selectedPlacedItem) {
                 selectedPlacedItem.style.border = 'none';
+                selectedPlacedItem.style.zIndex = '5';
             }
             
             // Select new item
             selectedPlacedItem = element;
             selectedPlacedItem.style.border = '2px solid #34C759';
+            selectedPlacedItem.style.zIndex = '10';
             
             // Show controls
             itemControls.style.display = 'flex';
             updateControlButtons();
-            
-            // Bring selected item to front
-            selectedPlacedItem.style.zIndex = '10';
         }
         
         // Delete a placed item
         function deletePlacedItem(id, type) {
+            console.log("Deleting placed item:", id);
+            
             // Remove from DOM
             const element = document.getElementById(id);
             if (element) {
@@ -895,21 +1160,29 @@
         
         // Switch to other items tray
         function switchToOtherItemsTray() {
-            // Clear all existing placed items from view
+            console.log("Switching to other items tray");
+            
+            // Hide laptop items (we're looking at a new tray now)
             placedItems.laptop.forEach(item => {
                 if (item.element) {
                     item.element.style.display = 'none';
                 }
             });
             
+            // Switch mode
             currentTrayMode = 'other';
             updateItemSelection();
             doneButton.style.display = 'block';
-            showFeedback('Now place your other items in the new tray');
+            itemControls.style.display = 'none';
+            selectedPlacedItem = null;
+            
+            showFeedback('Now place your other items in this tray');
         }
         
         // Show feedback message
         function showFeedback(message, isSuccess = true) {
+            console.log("Feedback:", message);
+            
             feedbackMessage.textContent = message;
             feedbackMessage.style.backgroundColor = isSuccess ? 
                 'rgba(52, 199, 89, 0.9)' : 'rgba(255, 59, 48, 0.9)';
@@ -923,18 +1196,18 @@
         
         // Reset the experience
         function resetExperience() {
-            // Clear all placed items
-            placedItems.laptop.forEach(item => {
-                if (item.element) {
-                    item.element.remove();
-                }
-            });
+            console.log("Resetting experience");
             
-            placedItems.other.forEach(item => {
-                if (item.element) {
-                    item.element.remove();
-                }
-            });
+            // Clear all placed items
+            while (itemOverlay.firstChild) {
+                itemOverlay.removeChild(itemOverlay.firstChild);
+            }
+            
+            // Stop camera access
+            if (cameraActive && cameraView.srcObject) {
+                cameraView.srcObject.getTracks().forEach(track => track.stop());
+                cameraActive = false;
+            }
             
             // Reset data
             currentTrayMode = 'laptop';
@@ -950,14 +1223,9 @@
             completeMessage.style.display = 'none';
             itemControls.style.display = 'none';
             
-            // Exit AR if active
-            if (arActive) {
-                arViewer.exitAR();
-            }
-            
             // Return to start screen
             initialInstruction.style.display = 'block';
-            arScene.style.display = 'none';
+            cameraContainer.style.display = 'none';
             instructionsPanel.style.display = 'none';
             itemSelection.style.display = 'none';
             trayMode.style.display = 'none';
@@ -965,7 +1233,7 @@
             doneButton.style.display = 'none';
         }
         
-        // Initialize the app
+        // Initialize the app when page loads
         window.addEventListener('load', initializeApp);
     </script>
 </body>
