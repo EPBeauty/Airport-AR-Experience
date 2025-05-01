@@ -132,104 +132,6 @@
             font-weight: 500;
         }
         
-        .tray-indicator {
-            position: absolute;
-            top: 30%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.6);
-            color: var(--white);
-            padding: 8px 15px;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 500;
-            z-index: 5;
-        }
-        
-        /* Initial positioning guide */
-        .positioning-guide {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            z-index: 150;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: var(--white);
-        }
-        
-        .positioning-guide h2 {
-            margin-bottom: 20px;
-            text-align: center;
-            padding: 0 20px;
-            font-weight: 600;
-        }
-        
-        .positioning-guide-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 90%;
-        }
-        
-        .positioning-guide p {
-            text-align: center;
-            margin-bottom: 15px;
-            padding: 0 20px;
-            font-weight: 400;
-        }
-        
-        .positioning-guide button {
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            margin-top: 20px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            min-height: 44px; /* Minimum touch target size */
-        }
-        
-        .complete-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 25px 35px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 80%;
-            z-index: 120;
-            display: none;
-        }
-        
-        .complete-message h2 {
-            color: var(--black);
-            margin-top: 0;
-            font-weight: 600;
-        }
-        
-        .complete-button {
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            margin-top: 15px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            min-height: 44px; /* Minimum touch target size */
-        }
-        
         .feedback-message {
             position: absolute;
             bottom: 120px;
@@ -303,45 +205,125 @@
             display: none;
             min-height: 44px; /* Minimum touch target size */
         }
+
+        .complete-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 120;
+            display: none;
+        }
+        
+        .complete-message h2 {
+            color: var(--black);
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        .complete-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 15px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .initial-instruction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 120;
+        }
+        
+        .initial-instruction h2 {
+            color: var(--black);
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        .start-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 15px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        /* Tray mode indicator */
+        .tray-mode {
+            position: absolute;
+            top: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(52, 199, 89, 0.9);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            z-index: 100;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <!-- Initial positioning guide -->
-    <div class="positioning-guide" id="positioningGuide">
-        <div class="positioning-guide-content">
-            <h2>Position Your Security Tray</h2>
-            <p>Place a physical security tray in front of you, then tap "Start AR" to begin.</p>
-            <p>You will use your camera to see virtual items which you can place in your real tray.</p>
-            <button id="startARButton">Start AR</button>
-        </div>
+    <div class="initial-instruction" id="initialInstruction">
+        <h2>Airport Security Check</h2>
+        <p>Place a physical security tray in front of you.</p>
+        <p>You'll use your camera to place virtual items in your real tray.</p>
+        <button class="start-button" id="startButton">Start AR Experience</button>
     </div>
     
-    <div class="instructions-panel">
-        <div class="instruction-step" id="mainInstruction">
-            <h2>Place Items in Your Tray</h2>
-            <p>Tap an item below, then position it in your security tray.</p>
-        </div>
+    <div class="instructions-panel" style="display: none;" id="instructionsPanel">
+        <h2>Select and Place Items</h2>
+        <p>Tap items below to place them in your physical tray</p>
     </div>
     
-    <div class="tray-indicator" id="trayIndicator">Position items in your tray</div>
+    <div class="tray-mode" id="trayMode" style="display: none;">
+        Laptop Tray
+    </div>
     
-    <div class="complete-message" id="completeMessage">
+    <div class="next-tray-message" id="nextTrayMessage" style="display: none;">
+        <h2>Now Use A Different Tray</h2>
+        <p>Place a new physical tray for your other items.</p>
+        <button class="next-tray-button" id="nextTrayButton">I've Placed A New Tray</button>
+    </div>
+    
+    <div class="complete-message" id="completeMessage" style="display: none;">
         <h2>Security Check Complete!</h2>
         <p>You've successfully arranged your items for airport security screening.</p>
         <button class="complete-button" id="restartButton">Start Over</button>
     </div>
     
-    <div class="next-tray-message" id="nextTrayMessage">
-        <h2>Now Use A Different Tray</h2>
-        <p>Place a new physical tray in view for the remaining items.</p>
-        <button class="next-tray-button" id="nextTrayButton">I've Placed A New Tray</button>
-    </div>
+    <div class="feedback-message" id="feedbackMessage"></div>
     
-    <div class="feedback-message" id="feedbackMessage">Item placed in tray.</div>
+    <button class="progress-button" id="progressButton" style="display: none;">
+        Continue to Next Tray
+    </button>
     
-    <button class="progress-button" id="progressButton">Continue to Next Tray</button>
-    
-    <div class="item-selection" id="itemSelection">
+    <div class="item-selection" id="itemSelection" style="display: none;">
         <!-- Item buttons will be added here -->
     </div>
     
@@ -351,14 +333,11 @@
         ar
         ar-modes="webxr scene-viewer quick-look"
         ar-scale="fixed"
+        ar-placement="floor"
         interaction-prompt="none"
         shadow-intensity="1"
-        ar-placement="floor"
-        environment-image="neutral">
-        
-        <button slot="ar-button" class="ar-button">
-            Start AR Experience
-        </button>
+        environment-image="neutral"
+        style="display: none;">
     </model-viewer>
     
     <script>
@@ -369,199 +348,203 @@
                 name: 'Laptop', 
                 type: 'laptop', 
                 model: 'laptop.glb', 
-                scale: '1.0 1.0 1.0',
-                arScale: '0.5 0.5 0.5' // Smaller scale for AR
+                scale: '0.5 0.5 0.5'  // Real-world scale for AR
             },
             { 
                 id: 'phone', 
                 name: 'Phone', 
                 type: 'other', 
                 model: 'phone.glb', 
-                scale: '0.7 0.7 0.7',
-                arScale: '0.3 0.3 0.3' // Smaller scale for AR
+                scale: '0.3 0.3 0.3'  // Real-world scale for AR (smaller than laptop)
             },
             { 
                 id: 'charger', 
                 name: 'Charger', 
                 type: 'other', 
                 model: 'charger.glb', 
-                scale: '0.75 0.75 0.75',
-                arScale: '0.35 0.35 0.35' // Smaller scale for AR
+                scale: '0.3 0.3 0.3'  // Real-world scale for AR
             },
             { 
                 id: 'bag', 
                 name: 'Bag', 
                 type: 'other', 
                 model: 'bag.glb', 
-                scale: '1.3 1.3 1.3',
-                arScale: '0.6 0.6 0.6' // Smaller scale for AR
+                scale: '0.6 0.6 0.6'  // Real-world scale for AR (larger than phone)
             },
             { 
                 id: 'hat', 
                 name: 'Hat', 
                 type: 'other', 
                 model: 'hat.glb', 
-                scale: '0.9 0.9 0.9',
-                arScale: '0.45 0.45 0.45' // Smaller scale for AR
+                scale: '0.4 0.4 0.4'  // Real-world scale for AR (medium size)
             },
             { 
                 id: 'keys', 
                 name: 'Keys', 
                 type: 'other', 
                 model: 'keys.glb', 
-                scale: '0.6 0.6 0.6',
-                arScale: '0.25 0.25 0.25' // Smaller scale for AR
+                scale: '0.25 0.25 0.25'  // Real-world scale for AR (smaller than phone)
             }
         ];
         
-        // Track current tray type
-        let currentTrayType = null;
+        // Track current tray mode
+        let currentTrayMode = 'laptop'; // Start with laptop tray
         
-        // Track current phase (1: first tray, 2: second tray)
-        let currentPhase = 1;
+        // Track items placed in AR
+        let placedItems = {
+            laptop: [],
+            other: []
+        };
         
-        // Track items in each category placed in AR
-        const laptopItems = items.filter(item => item.type === 'laptop');
-        const otherItems = items.filter(item => item.type === 'other');
-        
-        // Track items currently placed by category
-        let laptopItemsPlaced = [];
-        let otherItemsPlaced = [];
+        // Track AR session state
+        let arActive = false;
         
         // DOM Elements
-        const mainARViewer = document.getElementById('arViewer');
-        const positioningGuide = document.getElementById('positioningGuide');
-        const startARButton = document.getElementById('startARButton');
+        const initialInstruction = document.getElementById('initialInstruction');
+        const instructionsPanel = document.getElementById('instructionsPanel');
         const itemSelection = document.getElementById('itemSelection');
-        const trayIndicator = document.getElementById('trayIndicator');
-        const completeMessage = document.getElementById('completeMessage');
-        const restartButton = document.getElementById('restartButton');
+        const arViewer = document.getElementById('arViewer');
         const feedbackMessage = document.getElementById('feedbackMessage');
+        const progressButton = document.getElementById('progressButton');
         const nextTrayMessage = document.getElementById('nextTrayMessage');
         const nextTrayButton = document.getElementById('nextTrayButton');
-        const progressButton = document.getElementById('progressButton');
+        const completeMessage = document.getElementById('completeMessage');
+        const restartButton = document.getElementById('restartButton');
+        const trayMode = document.getElementById('trayMode');
+        const startButton = document.getElementById('startButton');
         
-        // Handle AR status change
-        mainARViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'session-started') {
-                console.log('AR session started');
-                // Hide positioning guide if still visible
-                positioningGuide.style.display = 'none';
-                
-                // Show item selection
-                itemSelection.style.display = 'flex';
-                
-                // Start with laptop tray
-                startLaptopTray();
-            } else if (event.detail.status === 'not-presenting') {
-                console.log('AR session ended');
-            } else if (event.detail.status === 'failed') {
-                console.log('AR session failed to start');
-                showFeedback("AR failed to start. Please try again.", false);
-            }
-        });
-        
-        // Start AR button
-        startARButton.addEventListener('click', () => {
-            // Hide the positioning guide
-            positioningGuide.style.display = 'none';
+        // Initialize event listeners
+        function initializeApp() {
+            // Start AR button
+            startButton.addEventListener('click', () => {
+                startARExperience();
+            });
             
-            // Activate AR by clicking the AR button
-            const arButton = mainARViewer.querySelector('button[slot="ar-button"]');
-            if (arButton) {
-                arButton.click();
-            }
-        });
-        
-        // Restart button
-        restartButton.addEventListener('click', () => {
-            resetExperience();
-        });
-        
-        // Next tray button
-        nextTrayButton.addEventListener('click', () => {
-            nextTrayMessage.style.display = 'none';
-            prepareForNextTray();
-        });
-        
-        // Progress button
-        progressButton.addEventListener('click', () => {
-            // Hide progress button
-            progressButton.style.display = 'none';
+            // Progress button (to move to next tray)
+            progressButton.addEventListener('click', () => {
+                if (placedItems.laptop.length > 0) {
+                    progressButton.style.display = 'none';
+                    nextTrayMessage.style.display = 'block';
+                }
+            });
             
-            // Show next tray message
-            nextTrayMessage.style.display = 'block';
-        });
-        
-        // Start with laptop tray
-        function startLaptopTray() {
-            currentTrayType = 'laptop';
-            updateTrayType();
-            initializeItems();
+            // Next tray button
+            nextTrayButton.addEventListener('click', () => {
+                nextTrayMessage.style.display = 'none';
+                switchToOtherItemsTray();
+            });
+            
+            // Restart button
+            restartButton.addEventListener('click', () => {
+                resetExperience();
+            });
+            
+            // AR status change
+            arViewer.addEventListener('ar-status', (event) => {
+                if (event.detail.status === 'session-started') {
+                    console.log('AR session started');
+                    arActive = true;
+                    
+                    // Show UI elements needed during AR
+                    instructionsPanel.style.display = 'block';
+                    itemSelection.style.display = 'flex';
+                    trayMode.style.display = 'block';
+                    
+                    // Initialize items for selection
+                    updateItemSelection();
+                } else if (event.detail.status === 'not-presenting') {
+                    console.log('AR session ended');
+                    arActive = false;
+                } else if (event.detail.status === 'failed') {
+                    console.log('AR session failed');
+                    showFeedback('AR failed to start. Please try again.', false);
+                }
+            });
+            
+            // Model placement listener
+            arViewer.addEventListener('model-visibility', (event) => {
+                if (event.detail.visible) {
+                    // After model is placed and visible
+                    console.log('Model is visible in AR');
+                }
+            });
         }
         
-        // Update tray indicator text
-        function updateTrayType() {
-            if (currentTrayType === 'laptop') {
-                trayIndicator.textContent = 'Place laptops in your tray';
-            } else {
-                trayIndicator.textContent = 'Place other items in your tray';
-            }
+        // Start the AR experience
+        function startARExperience() {
+            // Hide initial instruction
+            initialInstruction.style.display = 'none';
+            
+            // Show AR viewer
+            arViewer.style.display = 'block';
+            
+            // Start AR mode by clicking AR button
+            setTimeout(() => {
+                // Find and click the AR button to activate camera
+                const arButton = document.querySelector('button[slot="ar-button"]');
+                if (arButton) {
+                    arButton.click();
+                } else {
+                    // Fallback if button not found
+                    arViewer.activateAR();
+                }
+            }, 100);
         }
         
-        // Initialize item selection
-        function initializeItems() {
-            // Clear previous items
+        // Update available items based on current tray mode
+        function updateItemSelection() {
+            // Clear current items
             itemSelection.innerHTML = '';
             
-            // Show items based on current tray type
+            // Get items for current mode
             let availableItems;
-            
-            if (currentTrayType === 'laptop') {
-                availableItems = laptopItems.filter(item => 
-                    !laptopItemsPlaced.some(placed => placed.id === item.id)
+            if (currentTrayMode === 'laptop') {
+                availableItems = items.filter(item => 
+                    item.type === 'laptop' && 
+                    !placedItems.laptop.some(placed => placed.id === item.id)
                 );
+                trayMode.textContent = 'Laptop Tray';
             } else {
-                availableItems = otherItems.filter(item => 
-                    !otherItemsPlaced.some(placed => placed.id === item.id)
+                availableItems = items.filter(item => 
+                    item.type === 'other' && 
+                    !placedItems.other.some(placed => placed.id === item.id)
                 );
+                trayMode.textContent = 'Other Items Tray';
             }
             
-            // If no items left for this category, check if we need to move to next phase
+            // Check if we need to show progress button or complete message
             if (availableItems.length === 0) {
-                if (currentTrayType === 'laptop' && laptopItemsPlaced.length > 0) {
-                    // Show progress button to move to next tray
+                if (currentTrayMode === 'laptop' && placedItems.laptop.length > 0) {
+                    // All laptops placed, show progress button
                     progressButton.style.display = 'block';
-                } else if (currentTrayType === 'other' && otherItemsPlaced.length > 0) {
-                    // All done
+                } else if (currentTrayMode === 'other' && placedItems.other.length > 0) {
+                    // All items placed, show completion
                     completeMessage.style.display = 'block';
                 }
-                return;
             }
             
-            // Create a button for each available item
+            // Add buttons for available items
             availableItems.forEach(item => {
                 const button = document.createElement('button');
                 button.className = 'item-button';
                 button.setAttribute('data-id', item.id);
-                button.setAttribute('data-type', item.type);
                 
-                // Create thumbnail with model-viewer
+                // Thumbnail image (model-viewer for preview)
                 const modelViewer = document.createElement('model-viewer');
                 modelViewer.src = item.model;
                 modelViewer.setAttribute('auto-rotate', 'true');
                 modelViewer.setAttribute('camera-controls', 'false');
                 modelViewer.setAttribute('ar', 'false');
-                modelViewer.setAttribute('scale', item.scale);
+                modelViewer.setAttribute('shadow-intensity', '1');
                 
-                // Add label
+                // Label
                 const label = document.createElement('span');
                 label.textContent = item.name;
                 
                 button.appendChild(modelViewer);
                 button.appendChild(label);
                 
-                // Add event listener to place item in AR
+                // Add click event to place in AR
                 button.addEventListener('click', () => {
                     placeItemInAR(item);
                 });
@@ -572,61 +555,49 @@
         
         // Place an item in AR
         function placeItemInAR(item) {
-            // Create AR model
-            const model = document.createElement('model-viewer');
-            model.src = item.model;
-            model.setAttribute('ar', 'true');
-            model.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
-            model.setAttribute('camera-controls', 'true');
-            model.setAttribute('scale', item.arScale);
-            model.setAttribute('shadow-intensity', '1');
-            model.setAttribute('ar-placement', 'floor');
-            model.setAttribute('data-id', item.id);
-            model.setAttribute('data-type', item.type);
+            console.log(`Placing ${item.name} in AR`);
             
-            // Add event listeners to know when the model is placed
-            model.addEventListener('ar-status', (event) => {
-                if (event.detail.status === 'object-placed') {
-                    // Item has been placed in AR
-                    console.log(`${item.name} placed in AR`);
-                    handleItemPlaced(item);
-                }
-            });
+            // Update the main AR viewer with this model
+            arViewer.src = item.model;
+            arViewer.setAttribute('scale', item.scale);
             
-            // Replace main model viewer with this new one
-            const arContainer = document.body;
-            arContainer.appendChild(model);
-            
-            // Prompt user to place the item
+            // Show feedback to the user
             showFeedback(`Place the ${item.name} in your tray`);
+            
+            // Setup a listener for model placement
+            arViewer.addEventListener('model-visibility', onModelPlaced);
+            
+            // Function to handle when model is placed
+            function onModelPlaced(event) {
+                if (event.detail.visible) {
+                    // Remove this listener to prevent multiple calls
+                    arViewer.removeEventListener('model-visibility', onModelPlaced);
+                    
+                    // Record that the item was placed
+                    if (item.type === 'laptop') {
+                        placedItems.laptop.push(item);
+                    } else {
+                        placedItems.other.push(item);
+                    }
+                    
+                    // Show success feedback
+                    showFeedback(`${item.name} placed successfully!`);
+                    
+                    // In multi-item mode, show a new model viewer for the next item
+                    arViewer.src = ''; // Clear for next placement
+                    
+                    // Update available items
+                    updateItemSelection();
+                }
+            }
         }
         
-        // Handle when an item is placed in AR
-        function handleItemPlaced(item) {
-            // Track the placed item
-            if (item.type === 'laptop') {
-                if (!laptopItemsPlaced.some(i => i.id === item.id)) {
-                    laptopItemsPlaced.push(item);
-                    showFeedback(`${item.name} placed in tray`);
-                }
-            } else {
-                if (!otherItemsPlaced.some(i => i.id === item.id)) {
-                    otherItemsPlaced.push(item);
-                    showFeedback(`${item.name} placed in tray`);
-                }
-            }
-            
-            // Update available items
-            initializeItems();
-            
-            // Check if we've placed at least one item
-            if (currentTrayType === 'laptop' && laptopItemsPlaced.length > 0) {
-                // Enable continue button if we have at least one laptop
-                progressButton.style.display = 'block';
-            } else if (currentTrayType === 'other' && otherItemsPlaced.length > 0) {
-                // Enable continue button if we have at least one other item
-                progressButton.style.display = 'block';
-            }
+        // Switch to other items tray
+        function switchToOtherItemsTray() {
+            currentTrayMode = 'other';
+            trayMode.textContent = 'Other Items Tray';
+            updateItemSelection();
+            showFeedback('Now place your other items in the new tray');
         }
         
         // Show feedback message
@@ -642,35 +613,34 @@
             }, 3000);
         }
         
-        // Prepare for next tray
-        function prepareForNextTray() {
-            // Set tray type to other
-            currentTrayType = 'other';
-            updateTrayType();
-            
-            // Initialize other items
-            initializeItems();
-        }
-        
-        // Reset the entire experience
+        // Reset the experience
         function resetExperience() {
-            // Reset state
-            currentTrayType = null;
-            currentPhase = 1;
-            laptopItemsPlaced = [];
-            otherItemsPlaced = [];
+            // Reset data
+            currentTrayMode = 'laptop';
+            placedItems = {
+                laptop: [],
+                other: []
+            };
             
             // Reset UI
             completeMessage.style.display = 'none';
-            nextTrayMessage.style.display = 'none';
+            
+            // Exit AR if active
+            if (arActive) {
+                arViewer.exitAR();
+            }
+            
+            // Return to start screen
+            initialInstruction.style.display = 'block';
+            arViewer.style.display = 'none';
+            instructionsPanel.style.display = 'none';
+            itemSelection.style.display = 'none';
+            trayMode.style.display = 'none';
             progressButton.style.display = 'none';
-            
-            // Exit AR mode - this will trigger the ar-status event again
-            mainARViewer.exitAR();
-            
-            // Show positioning guide
-            positioningGuide.style.display = 'flex';
         }
+        
+        // Initialize the app
+        window.addEventListener('load', initializeApp);
     </script>
 </body>
 </html>
