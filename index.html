@@ -4,293 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Airport Security AR</title>
-    <script type="module" src="https://unpkg.com/three@0.132.2/build/three.module.js"></script>
-    <script type="module" src="https://unpkg.com/three@0.132.2/examples/jsm/loaders/GLTFLoader.js"></script>
-    <script type="module" src="https://unpkg.com/three@0.132.2/examples/jsm/webxr/ARButton.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.1.1/model-viewer.min.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
+        body { margin: 0; padding: 0; font-family: sans-serif; }
         
-        #ar-container {
-            position: absolute;
-            top: 0;
-            left: 0;
+        model-viewer {
             width: 100%;
-            height: 100%;
+            height: 85vh;
         }
         
-        .tray-info {
+        .tray-label {
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: white;
+            background: white;
             padding: 10px 20px;
             border-radius: 30px;
             font-weight: bold;
-            z-index: 10;
         }
         
         .button-bar {
             position: fixed;
             bottom: 0;
             left: 0;
-            width: 100%;
+            right: 0;
             display: flex;
-            padding: 15px;
+            padding: 10px;
             background: white;
-            border-top: 1px solid #ddd;
-            z-index: 10;
         }
         
-        .nav-button {
+        .button {
             flex: 1;
-            margin: 0 10px;
-            padding: 12px;
+            margin: 5px;
+            padding: 15px 0;
             border-radius: 30px;
             border: none;
-            background-color: white;
-            color: #3991f8;
             font-weight: bold;
-        }
-        
-        .nav-button.active {
-            background-color: #77ca64;
-            color: white;
-        }
-        
-        #ar-button {
-            position: absolute;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            background-color: #77ca64;
-            color: white;
-            border: none;
-            border-radius: 30px;
-            font-weight: bold;
-            z-index: 10;
+            text-align: center;
             text-transform: uppercase;
+        }
+        
+        .active {
+            background: #77ca64;
+            color: white;
+        }
+        
+        .inactive {
+            background: white;
+            color: #3991f8;
         }
     </style>
 </head>
 <body>
-    <div id="ar-container"></div>
-    <div class="tray-info" id="trayInfo">Laptop Tray</div>
-    <button id="ar-button">VIEW IN YOUR SPACE</button>
+    <div class="tray-label" id="trayLabel">Laptop Tray</div>
+    
+    <model-viewer 
+        id="model"
+        src="laptop.glb"
+        camera-controls
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        ar-scale="fixed"
+        shadow-intensity="1"
+        auto-rotate>
+    </model-viewer>
     
     <div class="button-bar">
-        <button class="nav-button active" id="laptopBtn">Laptop</button>
-        <button class="nav-button" id="otherBtn">Other Items</button>
+        <button class="button active" id="laptopButton">Laptop</button>
+        <button class="button inactive" id="otherButton">Other Items</button>
     </div>
-
-    <script type="module">
-        import * as THREE from 'https://unpkg.com/three@0.132.2/build/three.module.js';
-        import { GLTFLoader } from 'https://unpkg.com/three@0.132.2/examples/jsm/loaders/GLTFLoader.js';
-        import { ARButton } from 'https://unpkg.com/three@0.132.2/examples/jsm/webxr/ARButton.js';
-
-        // DOM Elements
-        const container = document.getElementById('ar-container');
-        const trayInfo = document.getElementById('trayInfo');
-        const laptopBtn = document.getElementById('laptopBtn');
-        const otherBtn = document.getElementById('otherBtn');
-        const arButton = document.getElementById('ar-button');
+    
+    <script>
+        const model = document.getElementById('model');
+        const trayLabel = document.getElementById('trayLabel');
+        const laptopButton = document.getElementById('laptopButton');
+        const otherButton = document.getElementById('otherButton');
         
-        // Scene setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.xr.enabled = true;
-        container.appendChild(renderer.domElement);
-        
-        // Lighting
-        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-        light.position.set(0.5, 1, 0.25);
-        scene.add(light);
-        
-        // Models and positioning
-        const models = {
-            laptop: {
-                file: 'laptop.glb',
-                position: new THREE.Vector3(0, 0, -0.5),
-                scale: 0.5,
-                rotation: 0
-            },
-            otherItems: [
-                {
-                    file: 'phone.glb',
-                    position: new THREE.Vector3(-0.2, 0, -0.5),
-                    scale: 0.3,
-                    rotation: 0
-                },
-                {
-                    file: 'charger.glb',
-                    position: new THREE.Vector3(0.2, 0, -0.5),
-                    scale: 0.3,
-                    rotation: 0
-                },
-                {
-                    file: 'keys.glb',
-                    position: new THREE.Vector3(0, 0, -0.3),
-                    scale: 0.3,
-                    rotation: 0
-                },
-                {
-                    file: 'hat.glb',
-                    position: new THREE.Vector3(-0.3, 0, -0.3),
-                    scale: 0.3,
-                    rotation: 0
-                },
-                {
-                    file: 'bag.glb',
-                    position: new THREE.Vector3(0.3, 0, -0.3),
-                    scale: 0.3,
-                    rotation: 0
-                }
-            ]
-        };
-        
-        // Current mode
+        // Current mode and other items index
         let currentMode = 'laptop';
-        // Store loaded models
-        let loadedModels = [];
+        let otherItemIndex = 0;
         
-        // GLTF Loader
-        const loader = new GLTFLoader();
+        // Other item models
+        const otherItems = [
+            'phone.glb',
+            'charger.glb',
+            'keys.glb',
+            'bag.glb',
+            'hat.glb'
+        ];
         
-        // Initialize AR Button
-        arButton.addEventListener('click', startAR);
-        
-        // Initialize buttons
-        laptopBtn.addEventListener('click', () => switchMode('laptop'));
-        otherBtn.addEventListener('click', () => switchMode('other'));
-        
-        // Handle window resize
-        window.addEventListener('resize', onWindowResize);
-        
-        // Start rendering loop
-        renderer.setAnimationLoop(render);
-        
-        // Load the initial model (laptop)
-        loadLaptopModel();
-        
-        // Function to load the laptop model
-        function loadLaptopModel() {
-            // Clear previous models
-            clearModels();
+        // Button click handlers
+        laptopButton.addEventListener('click', () => {
+            currentMode = 'laptop';
+            model.src = 'laptop.glb';
+            trayLabel.textContent = 'Laptop Tray';
             
-            // Load the laptop model
-            loader.load(models.laptop.file, (gltf) => {
-                const model = gltf.scene;
-                
-                // Set position and scale
-                model.position.copy(models.laptop.position);
-                model.scale.set(
-                    models.laptop.scale, 
-                    models.laptop.scale, 
-                    models.laptop.scale
-                );
-                
-                // Add to scene
-                scene.add(model);
-                loadedModels.push(model);
-            }, undefined, (error) => {
-                console.error('Error loading laptop model:', error);
-            });
-        }
+            laptopButton.className = 'button active';
+            otherButton.className = 'button inactive';
+        });
         
-        // Function to load all other items
-        function loadOtherItems() {
-            // Clear previous models
-            clearModels();
+        otherButton.addEventListener('click', () => {
+            currentMode = 'other';
             
-            // Load each other item
-            models.otherItems.forEach(item => {
-                loader.load(item.file, (gltf) => {
-                    const model = gltf.scene;
-                    
-                    // Set position and scale
-                    model.position.copy(item.position);
-                    model.scale.set(
-                        item.scale, 
-                        item.scale, 
-                        item.scale
-                    );
-                    
-                    // Add to scene
-                    scene.add(model);
-                    loadedModels.push(model);
-                }, undefined, (error) => {
-                    console.error(`Error loading ${item.file}:`, error);
-                });
-            });
-        }
+            // Cycle through other items
+            otherItemIndex = (otherItemIndex + 1) % otherItems.length;
+            const itemName = otherItems[otherItemIndex].split('.')[0];
+            
+            model.src = otherItems[otherItemIndex];
+            trayLabel.textContent = 'Other Items: ' + itemName.charAt(0).toUpperCase() + itemName.slice(1);
+            
+            laptopButton.className = 'button inactive';
+            otherButton.className = 'button active';
+        });
         
-        // Function to clear all models from scene
-        function clearModels() {
-            loadedModels.forEach(model => {
-                scene.remove(model);
-            });
-            
-            loadedModels = [];
-        }
-        
-        // Function to switch between modes
-        function switchMode(mode) {
-            currentMode = mode;
-            
-            if (mode === 'laptop') {
-                laptopBtn.classList.add('active');
-                otherBtn.classList.remove('active');
-                trayInfo.textContent = 'Laptop Tray';
-                
-                loadLaptopModel();
-            } else {
-                otherBtn.classList.add('active');
-                laptopBtn.classList.remove('active');
-                trayInfo.textContent = 'Other Items Tray';
-                
-                loadOtherItems();
-            }
-        }
-        
-        // Function to start AR
-        function startAR() {
-            // Create the AR Button from Three.js
-            const xrButton = ARButton.createButton(renderer, {
-                requiredFeatures: ['hit-test'],
-                optionalFeatures: ['dom-overlay'],
-                domOverlay: { root: document.body }
-            });
-            
-            // Hide our custom button
-            arButton.style.display = 'none';
-            
-            // Click the real AR button
-            xrButton.click();
-            
-            // Remove it after clicking
-            xrButton.remove();
-        }
-        
-        // Handle window resize
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-        
-        // Render function
-        function render() {
-            renderer.render(scene, camera);
-        }
+        // Handle model loading error
+        model.addEventListener('error', function(event) {
+            console.error('Error loading model:', event);
+            alert('Error loading model. Please check file paths.');
+        });
     </script>
 </body>
 </html>
