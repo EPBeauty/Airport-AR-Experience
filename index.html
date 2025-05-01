@@ -2,97 +2,44 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Airport Security Simulation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airport Security AR</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        :root {
-            --primary-green: #34C759;
-            --light-gray: #F5F5F5;
-            --black: #000000;
-            --white: #FFFFFF;
-        }
-        
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
             padding: 0;
-            position: relative;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
             height: 100vh;
+        }
+        model-viewer {
             width: 100%;
-            overflow: hidden;
-            color: var(--black);
-            touch-action: none;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            background-color: var(--light-gray);
+            height: 90vh;
+            background-color: #f5f5f5;
         }
         
-        .scene-container {
-            width: 100%;
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .camera-background {
-            width: 100%;
-            height: 100%;
+        .ar-button {
+            background-color: #34C759;
+            color: white;
+            border-radius: 8px;
+            border: none;
             position: absolute;
-            top: 0;
-            left: 0;
-            background-image: url('https://source.unsplash.com/random/1920x1080/?airport');
-            background-size: cover;
-            background-position: center;
-            filter: blur(2px);
-        }
-        
-        .tray-visualizer {
-            width: 90%;
-            height: 50%;
-            background-color: rgba(255, 255, 255, 0.8);
-            border-radius: 15px;
-            position: absolute;
-            top: 20%;
             left: 50%;
+            bottom: 50px;
             transform: translateX(-50%);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
-        
-        .instructions-panel {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-width: 90%;
-            z-index: 100;
-            text-align: center;
-        }
-        
-        .instructions-panel h2 {
-            margin-top: 0;
-            color: var(--black);
-            font-size: 1.4rem;
-            font-weight: 600;
-        }
-        
-        .instructions-panel p {
-            color: var(--black);
-            font-size: 1rem;
-            line-height: 1.5;
-            font-weight: 400;
+            padding: 12px 24px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 10;
         }
         
         .item-selection {
@@ -107,1134 +54,102 @@
             padding: 10px;
             z-index: 10;
             background-color: rgba(255, 255, 255, 0.7);
-            border-top-left-radius: 15px;
-            border-top-right-radius: 15px;
             backdrop-filter: blur(5px);
         }
         
         .item-button {
-            background-color: var(--white);
-            border-radius: 10px;
+            background-color: white;
+            border-radius: 8px;
             border: none;
-            padding: 10px;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            padding: 8px 16px;
             font-family: 'Inter', sans-serif;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             cursor: pointer;
-            position: relative;
         }
         
         .item-button.active {
-            border: 2px solid var(--primary-green);
-        }
-        
-        .item-thumbnail {
-            width: 60px;
-            height: 60px;
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: #34C759;
             color: white;
-            font-weight: bold;
-            font-size: 10px;
         }
         
-        .item-button span {
-            margin-top: 5px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .feedback-message {
-            position: absolute;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(52, 199, 89, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 100;
-            text-align: center;
-            max-width: 80%;
-        }
-        
-        .feedback-message.visible {
-            opacity: 1;
-        }
-        
-        .next-tray-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 25px 35px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 80%;
-            z-index: 120;
-            display: none;
-        }
-        
-        .next-tray-message h2 {
-            color: var(--black);
-            margin-top: 0;
-            font-weight: 600;
-        }
-        
-        .next-tray-button {
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            margin-top: 15px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            min-height: 44px; /* Minimum touch target size */
-        }
-        
-        /* Progress button that appears after placing items */
-        .progress-button {
-            position: absolute;
-            bottom: 120px;
-            right: 20px;
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 100;
-            display: none;
-            min-height: 44px; /* Minimum touch target size */
-        }
-
-        .complete-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 25px 35px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 80%;
-            z-index: 120;
-            display: none;
-        }
-        
-        .complete-message h2 {
-            color: var(--black);
-            margin-top: 0;
-            font-weight: 600;
-        }
-        
-        .complete-button {
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            margin-top: 15px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .initial-instruction {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 25px 35px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 80%;
-            z-index: 120;
-        }
-        
-        .initial-instruction h2 {
-            color: var(--black);
-            margin-top: 0;
-            font-weight: 600;
-        }
-        
-        .start-button {
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            margin-top: 15px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            min-height: 44px;
-        }
-
-        /* Tray mode indicator */
-        .tray-mode {
-            position: absolute;
-            top: 85px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(52, 199, 89, 0.9);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            z-index: 100;
-            text-align: center;
-        }
-        
-        /* Controls for item manipulation */
-        .item-controls {
-            position: absolute;
-            top: 85px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 100;
-            display: none;
-        }
-        
-        .control-button {
-            background-color: rgba(255, 255, 255, 0.9);
-            color: var(--black);
-            border: none;
-            border-radius: 8px;
-            padding: 10px;
-            width: 44px;
-            height: 44px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            font-size: 16px;
-        }
-        
-        .control-button.active {
-            background-color: var(--primary-green);
-            color: var(--white);
-        }
-        
-        .item-placed {
-            position: absolute;
-            pointer-events: auto;
-            touch-action: none;
-            transform-origin: center;
-            z-index: 5;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        
-        .done-button {
-            position: absolute;
-            bottom: 120px;
-            left: 20px;
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 100;
-            display: none;
-            min-height: 44px;
-        }
-        
-        .delete-button {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            width: 24px;
-            height: 24px;
-            background-color: #FF3B30;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            font-weight: bold;
-            font-size: 14px;
-            z-index: 101;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-        }
-        
-        .resize-handle {
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: rgba(255,255,255,0.8);
-            border-radius: 50%;
-            bottom: -10px;
-            right: -10px;
-            cursor: se-resize;
-            z-index: 102;
-        }
-        
-        .notice-panel {
+        .tray-info {
             position: absolute;
             top: 20px;
-            right: 20px;
-            background-color: rgba(255, 204, 0, 0.9);
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            color: black;
-            z-index: 1000;
-        }
-        
-        /* For the background image thumbnails */
-        .bg-selector {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            z-index: 100;
-        }
-        
-        .bg-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 5px;
-            background-size: cover;
-            background-position: center;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-        
-        .bg-option.active {
-            border-color: var(--primary-green);
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            z-index: 10;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="initial-instruction" id="initialInstruction">
-        <h2>Airport Security Simulation</h2>
-        <p>Learn how to organize your items in security trays</p>
-        <p>Remember: Laptops must be placed in a separate tray!</p>
-        <button class="start-button" id="startButton">Start Simulation</button>
-    </div>
-    
-    <div class="notice-panel">Fallback Mode: Camera access not available in this environment</div>
-    
-    <div class="scene-container" id="sceneContainer" style="display: none;">
-        <div class="camera-background" id="cameraBackground"></div>
-        <div class="tray-visualizer" id="trayVisualizer">
-            <!-- Placed items will appear here -->
+    <div class="container">
+        <div class="tray-info" id="trayInfo">Laptop Tray</div>
+        
+        <model-viewer 
+            id="viewer"
+            src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            camera-controls
+            auto-rotate>
+            
+            <button slot="ar-button" class="ar-button">
+                View in Your Space
+            </button>
+        </model-viewer>
+        
+        <div class="item-selection" id="itemSelection">
+            <button class="item-button active" data-model="laptop">Laptop</button>
+            <button class="item-button" data-model="phone">Phone</button>
+            <button class="item-button" data-model="other">Other Items</button>
         </div>
     </div>
     
-    <div class="bg-selector" id="bgSelector" style="display: none;">
-        <div class="bg-option active" style="background-image: url('https://source.unsplash.com/random/100x100/?airport')" data-bg="airport"></div>
-        <div class="bg-option" style="background-image: url('https://source.unsplash.com/random/100x100/?security')" data-bg="security"></div>
-        <div class="bg-option" style="background-image: url('https://source.unsplash.com/random/100x100/?tray')" data-bg="tray"></div>
-    </div>
-    
-    <div class="instructions-panel" style="display: none;" id="instructionsPanel">
-        <h2>Select and Place Items</h2>
-        <p>Tap items below, then place them in your tray. Move and rotate by dragging.</p>
-    </div>
-    
-    <div class="tray-mode" id="trayMode" style="display: none;">
-        Laptop Tray
-    </div>
-    
-    <div class="next-tray-message" id="nextTrayMessage" style="display: none;">
-        <h2>Now Use A Different Tray</h2>
-        <p>You'll now organize your other items in a separate tray.</p>
-        <button class="next-tray-button" id="nextTrayButton">Continue to Next Tray</button>
-    </div>
-    
-    <div class="complete-message" id="completeMessage" style="display: none;">
-        <h2>Security Check Complete!</h2>
-        <p>You've successfully arranged your items for airport security screening.</p>
-        <button class="complete-button" id="restartButton">Start Over</button>
-    </div>
-    
-    <div class="feedback-message" id="feedbackMessage"></div>
-    
-    <button class="progress-button" id="progressButton" style="display: none;">
-        Continue to Next Tray
-    </button>
-    
-    <button class="done-button" id="doneButton" style="display: none;">
-        Done Placing Items
-    </button>
-    
-    <div class="item-controls" id="itemControls" style="display: none;">
-        <button class="control-button active" id="moveButton">↕</button>
-        <button class="control-button" id="rotateButton">↻</button>
-    </div>
-    
-    <div class="item-selection" id="itemSelection" style="display: none;">
-        <!-- Item buttons will be added here -->
-    </div>
-    
     <script>
-        // Available items to place with realistic size ratios
-        const items = [
-            { 
-                id: 'laptop', 
-                name: 'Laptop', 
-                type: 'laptop', 
-                color: '#3498db',
-                width: 150,
-                height: 100
-            },
-            { 
-                id: 'phone', 
-                name: 'Phone', 
-                type: 'other', 
-                color: '#e74c3c',
-                width: 40,
-                height: 80
-            },
-            { 
-                id: 'charger', 
-                name: 'Charger', 
-                type: 'other', 
-                color: '#e67e22',
-                width: 60,
-                height: 40
-            },
-            { 
-                id: 'bag', 
-                name: 'Bag', 
-                type: 'other', 
-                color: '#9b59b6',
-                width: 120,
-                height: 100
-            },
-            { 
-                id: 'hat', 
-                name: 'Hat', 
-                type: 'other', 
-                color: '#2ecc71',
-                width: 80,
-                height: 40
-            },
-            { 
-                id: 'keys', 
-                name: 'Keys', 
-                type: 'other', 
-                color: '#f1c40f',
-                width: 40,
-                height: 30
-            }
-        ];
-        
-        // Background images for simulation
-        const backgroundImages = {
-            airport: 'https://source.unsplash.com/random/1920x1080/?airport',
-            security: 'https://source.unsplash.com/random/1920x1080/?security',
-            tray: 'https://source.unsplash.com/random/1920x1080/?tray'
-        };
-        
-        // Track current tray mode
-        let currentTrayMode = 'laptop'; // Start with laptop tray
-        
-        // Track items placed in the tray
-        let placedItems = {
-            laptop: [],
-            other: []
-        };
-        
-        // Track currently selected item for placing
-        let selectedItem = null;
-        
-        // Track currently selected placed item for manipulation
-        let selectedPlacedItem = null;
-        
-        // Track interaction mode (move or rotate)
-        let interactionMode = 'move';
-        
-        // Track unique ID for placed items
-        let placedItemId = 0;
-        
-        // DOM Elements
-        const initialInstruction = document.getElementById('initialInstruction');
-        const instructionsPanel = document.getElementById('instructionsPanel');
+        // Get DOM elements
+        const viewer = document.getElementById('viewer');
         const itemSelection = document.getElementById('itemSelection');
-        const sceneContainer = document.getElementById('sceneContainer');
-        const trayVisualizer = document.getElementById('trayVisualizer');
-        const cameraBackground = document.getElementById('cameraBackground');
-        const bgSelector = document.getElementById('bgSelector');
-        const feedbackMessage = document.getElementById('feedbackMessage');
-        const progressButton = document.getElementById('progressButton');
-        const doneButton = document.getElementById('doneButton');
-        const nextTrayMessage = document.getElementById('nextTrayMessage');
-        const nextTrayButton = document.getElementById('nextTrayButton');
-        const completeMessage = document.getElementById('completeMessage');
-        const restartButton = document.getElementById('restartButton');
-        const trayMode = document.getElementById('trayMode');
-        const startButton = document.getElementById('startButton');
-        const itemControls = document.getElementById('itemControls');
-        const rotateButton = document.getElementById('rotateButton');
-        const moveButton = document.getElementById('moveButton');
+        const trayInfo = document.getElementById('trayInfo');
         
-        // Initialize event listeners
-        function initializeApp() {
-            console.log("Initializing app");
-            
-            // Start button
-            startButton.addEventListener('click', () => {
-                startExperience();
-            });
-            
-            // Background selector
-            const bgOptions = document.querySelectorAll('.bg-option');
-            bgOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    // Set active class
-                    bgOptions.forEach(o => o.classList.remove('active'));
-                    option.classList.add('active');
-                    
-                    // Set background
-                    const bgType = option.getAttribute('data-bg');
-                    cameraBackground.style.backgroundImage = `url('${backgroundImages[bgType]}')`;
-                });
-            });
-            
-            // Progress button (to move to next tray)
-            progressButton.addEventListener('click', () => {
-                if (placedItems.laptop.length > 0) {
-                    progressButton.style.display = 'none';
-                    doneButton.style.display = 'none';
-                    nextTrayMessage.style.display = 'block';
-                }
-            });
-            
-            // Done button (when finished placing items)
-            doneButton.addEventListener('click', () => {
-                if (currentTrayMode === 'laptop' && placedItems.laptop.length > 0) {
-                    progressButton.style.display = 'block';
-                    showFeedback('Laptop tray complete! Continue when ready.');
-                } else if (currentTrayMode === 'other' && placedItems.other.length > 0) {
-                    completeMessage.style.display = 'block';
-                }
-            });
-            
-            // Next tray button
-            nextTrayButton.addEventListener('click', () => {
-                nextTrayMessage.style.display = 'none';
-                switchToOtherItemsTray();
-            });
-            
-            // Restart button
-            restartButton.addEventListener('click', () => {
-                resetExperience();
-            });
-            
-            // Control buttons
-            rotateButton.addEventListener('click', () => {
-                interactionMode = 'rotate';
-                updateControlButtons();
-            });
-            
-            moveButton.addEventListener('click', () => {
-                interactionMode = 'move';
-                updateControlButtons();
-            });
-            
-            // Click on tray visualizer to place items
-            trayVisualizer.addEventListener('click', (event) => {
-                if (selectedItem && !event.target.closest('.item-placed')) {
-                    placeSelectedItem(event);
-                }
-            });
-        }
+        // Available 3D models
+        const models = {
+            laptop: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+            phone: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+            other: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
+        };
         
-        // Start the experience
-        function startExperience() {
-            console.log("Starting experience");
-            
-            // Hide initial instruction
-            initialInstruction.style.display = 'none';
-            
-            // Show scene
-            sceneContainer.style.display = 'block';
-            instructionsPanel.style.display = 'block';
-            itemSelection.style.display = 'flex';
-            trayMode.style.display = 'block';
-            doneButton.style.display = 'block';
-            bgSelector.style.display = 'flex';
-            
-            // Initialize items for selection
-            updateItemSelection();
-            
-            // Show initial feedback
-            showFeedback('Select an item to place in your laptop tray');
-        }
-        
-        // Update available items based on current tray mode
-        function updateItemSelection() {
-            console.log("Updating item selection for mode:", currentTrayMode);
-            
-            // Clear current items
-            itemSelection.innerHTML = '';
-            
-            // Get items for current mode
-            let availableItems;
-            if (currentTrayMode === 'laptop') {
-                availableItems = items.filter(item => item.type === 'laptop');
-                trayMode.textContent = 'Laptop Tray';
-            } else {
-                availableItems = items.filter(item => item.type === 'other');
-                trayMode.textContent = 'Other Items Tray';
-            }
-            
-            // Add buttons for available items
-            availableItems.forEach(item => {
-                const button = document.createElement('button');
-                button.className = 'item-button';
-                button.setAttribute('data-id', item.id);
+        // Handle item selection
+        const buttons = document.querySelectorAll('.item-button');
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Update active button
+                buttons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
                 
-                // Create colored thumbnail div
-                const thumbnail = document.createElement('div');
-                thumbnail.className = 'item-thumbnail';
-                thumbnail.style.backgroundColor = item.color;
-                thumbnail.textContent = item.name;
+                // Get model type
+                const modelType = button.getAttribute('data-model');
                 
-                // Label
-                const label = document.createElement('span');
-                label.textContent = item.name;
+                // Update model
+                viewer.src = models[modelType];
                 
-                button.appendChild(thumbnail);
-                button.appendChild(label);
-                
-                // Add click event to select item
-                button.addEventListener('click', () => {
-                    selectItemForPlacement(item);
-                });
-                
-                itemSelection.appendChild(button);
-            });
-        }
-        
-        // Select an item for placement
-        function selectItemForPlacement(item) {
-            console.log("Selected item for placement:", item.name);
-            
-            // Update selected item
-            selectedItem = item;
-            
-            // Update UI to show selected item
-            const buttons = document.querySelectorAll('.item-button');
-            buttons.forEach(button => {
-                if (button.getAttribute('data-id') === item.id) {
-                    button.classList.add('active');
+                // Update tray info
+                if (modelType === 'laptop') {
+                    trayInfo.textContent = 'Laptop Tray';
                 } else {
-                    button.classList.remove('active');
+                    trayInfo.textContent = 'Other Items Tray';
                 }
             });
-            
-            // Show feedback to the user
-            showFeedback(`Tap in the tray to place the ${item.name}`);
-        }
+        });
         
-        // Place the selected item in the tray
-        function placeSelectedItem(event) {
-            if (!selectedItem) return;
-            
-            console.log("Placing item:", selectedItem.name);
-            
-            // Create a unique ID for this placed item
-            const uniqueId = `item-${selectedItem.id}-${placedItemId++}`;
-            
-            // Create a new element for the placed item
-            const placedItemElement = document.createElement('div');
-            placedItemElement.className = 'item-placed';
-            placedItemElement.id = uniqueId;
-            placedItemElement.style.width = `${selectedItem.width}px`;
-            placedItemElement.style.height = `${selectedItem.height}px`;
-            placedItemElement.style.backgroundColor = selectedItem.color;
-            
-            // Add text label to the item
-            placedItemElement.style.display = 'flex';
-            placedItemElement.style.alignItems = 'center';
-            placedItemElement.style.justifyContent = 'center';
-            placedItemElement.style.color = 'white';
-            placedItemElement.style.fontWeight = 'bold';
-            placedItemElement.textContent = selectedItem.name;
-            
-            // Position at tap location or center of view if event coordinates are not valid
-            const rect = trayVisualizer.getBoundingClientRect();
-            let x = event.clientX - rect.left - (selectedItem.width / 2);
-            let y = event.clientY - rect.top - (selectedItem.height / 2);
-            
-            // Ensure the item stays within tray bounds
-            x = Math.max(0, Math.min(x, rect.width - selectedItem.width));
-            y = Math.max(0, Math.min(y, rect.height - selectedItem.height));
-            
-            placedItemElement.style.left = `${x}px`;
-            placedItemElement.style.top = `${y}px`;
-            placedItemElement.style.position = 'absolute';
-            placedItemElement.style.transform = 'rotate(0deg)';
-            
-            // Create delete button
-            const deleteButton = document.createElement('button');
-            deleteButton.className = 'delete-button';
-            deleteButton.textContent = '×';
-            deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                deletePlacedItem(uniqueId, selectedItem.type);
-            });
-            
-            // Create resize handle
-            const resizeHandle = document.createElement('div');
-            resizeHandle.className = 'resize-handle';
-            
-            // Add delete button and resize handle to placed item
-            placedItemElement.appendChild(deleteButton);
-            placedItemElement.appendChild(resizeHandle);
-            
-            // Add to tray visualizer
-            trayVisualizer.appendChild(placedItemElement);
-            
-            // Setup interaction handlers
-            setupItemInteraction(placedItemElement, resizeHandle);
-            
-            // Record placed item
-            const placedItem = {
-                id: uniqueId,
-                itemId: selectedItem.id,
-                element: placedItemElement,
-                item: selectedItem
-            };
-            
-            if (selectedItem.type === 'laptop') {
-                placedItems.laptop.push(placedItem);
-            } else {
-                placedItems.other.push(placedItem);
-            }
-            
-            // Show success feedback
-            showFeedback(`${selectedItem.name} placed successfully! Tap and drag to position.`);
-            
-            // Reset for next placement
-            selectedItem = null;
-            
-            // Update selection buttons
-            const buttons = document.querySelectorAll('.item-button');
-            buttons.forEach(button => {
-                button.classList.remove('active');
-            });
-        }
-        
-        // Setup interaction for placed items (move, rotate, resize)
-        function setupItemInteraction(element, resizeHandle) {
-            console.log("Setting up interaction for:", element.id);
-            
-            // Variables to track state
-            let isDragging = false;
-            let isResizing = false;
-            let isRotating = false;
-            let startX, startY;
-            let startLeft, startTop;
-            let startWidth, startHeight;
-            let startRotation = 0;
-            
-            // Select the item on click
-            element.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-                selectPlacedItem(element);
-                
-                if (interactionMode === 'move') {
-                    startDrag(e);
-                } else if (interactionMode === 'rotate') {
-                    startRotate(e);
-                }
-            });
-            
-            element.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-                selectPlacedItem(element);
-                
-                if (interactionMode === 'move') {
-                    startDrag(e.touches[0]);
-                } else if (interactionMode === 'rotate') {
-                    startRotate(e.touches[0]);
-                }
-            });
-            
-            // Setup resize handle
-            resizeHandle.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-                startResize(e);
-            });
-            
-            resizeHandle.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-                startResize(e.touches[0]);
-            });
-            
-            // Start dragging the item
-            function startDrag(e) {
-                isDragging = true;
-                isRotating = false;
-                isResizing = false;
-                
-                startX = e.clientX;
-                startY = e.clientY;
-                startLeft = parseInt(element.style.left) || 0;
-                startTop = parseInt(element.style.top) || 0;
-                
-                document.addEventListener('mousemove', moveDrag);
-                document.addEventListener('touchmove', touchMoveDrag);
-                document.addEventListener('mouseup', stopDrag);
-                document.addEventListener('touchend', stopDrag);
-                
-                e.preventDefault();
-            }
-            
-            // Start rotating the item
-            function startRotate(e) {
-                isRotating = true;
-                isDragging = false;
-                isResizing = false;
-                
-                const rect = element.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                
-                // Get current rotation
-                const transform = element.style.transform;
-                const rotateMatch = transform.match(/rotate\(([^)]+)deg\)/);
-                startRotation = rotateMatch ? parseFloat(rotateMatch[1]) : 0;
-                
-                // Calculate initial angle
-                const initialAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
-                
-                document.addEventListener('mousemove', moveRotate);
-                document.addEventListener('touchmove', touchMoveRotate);
-                document.addEventListener('mouseup', stopRotate);
-                document.addEventListener('touchend', stopRotate);
-                
-                e.preventDefault();
-            }
-            
-            // Start resizing the item
-            function startResize(e) {
-                isResizing = true;
-                isDragging = false;
-                isRotating = false;
-                
-                startX = e.clientX;
-                startY = e.clientY;
-                startWidth = parseInt(element.style.width) || element.clientWidth;
-                startHeight = parseInt(element.style.height) || element.clientHeight;
-                
-                document.addEventListener('mousemove', moveResize);
-                document.addEventListener('touchmove', touchMoveResize);
-                document.addEventListener('mouseup', stopResize);
-                document.addEventListener('touchend', stopResize);
-                
-                e.preventDefault();
-            }
-            
-            // Move functions for mouse
-            function moveDrag(e) {
-                if (!isDragging) return;
-                
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                
-                // Calculate new position
-                let newLeft = startLeft + dx;
-                let newTop = startTop + dy;
-                
-                // Ensure the item stays within tray bounds
-                const rect = trayVisualizer.getBoundingClientRect();
-                const itemWidth = parseInt(element.style.width) || element.clientWidth;
-                const itemHeight = parseInt(element.style.height) || element.clientHeight;
-                
-                newLeft = Math.max(0, Math.min(newLeft, rect.width - itemWidth));
-                newTop = Math.max(0, Math.min(newTop, rect.height - itemHeight));
-                
-                element.style.left = `${newLeft}px`;
-                element.style.top = `${newTop}px`;
-                
-                e.preventDefault();
-            }
-            
-            function moveRotate(e) {
-                if (!isRotating) return;
-                
-                const rect = element.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                
-                // Calculate angle based on mouse position relative to center
-                const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
-                
-                element.style.transform = `rotate(${angle}deg)`;
-                
-                e.preventDefault();
-            }
-            
-            function moveResize(e) {
-                if (!isResizing) return;
-                
-                const dx = e.clientX - startX;
-                const dy = e.clientY - startY;
-                
-                // Calculate new size while maintaining aspect ratio
-                const aspectRatio = startWidth / startHeight;
-                const newWidth = Math.max(40, startWidth + dx);
-                const newHeight = Math.max(40, newWidth / aspectRatio);
-                
-                element.style.width = `${newWidth}px`;
-                element.style.height = `${newHeight}px`;
-                
-                e.preventDefault();
-            }
-            
-            // Touch event handlers
-            function touchMoveDrag(e) {
-                if (!isDragging || !e.touches[0]) return;
-                
-                const touch = e.touches[0];
-                const dx = touch.clientX - startX;
-                const dy = touch.clientY - startY;
-                
-                // Calculate new position
-                let newLeft = startLeft + dx;
-                let newTop = startTop + dy;
-                
-                // Ensure the item stays within tray bounds
-                const rect = trayVisualizer.getBoundingClientRect();
-                const itemWidth = parseInt(element.style.width) || element.clientWidth;
-                const itemHeight = parseInt(element.style.height) || element.clientHeight;
-                
-                newLeft = Math.max(0, Math.min(newLeft, rect.width - itemWidth));
-                newTop = Math.max(0, Math.min(newTop, rect.height - itemHeight));
-                
-                element.style.left = `${newLeft}px`;
-                element.style.top = `${newTop}px`;
-                
-                e.preventDefault();
-            }
-            
-            function touchMoveRotate(e) {
-                if (!isRotating || !e.touches[0]) return;
-                
-                const touch = e.touches[0];
-                const rect = element.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                
-                // Calculate angle based on touch position relative to center
-                const angle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX) * (180 / Math.PI);
-                
-                element.style.transform = `rotate(${angle}deg)`;
-                
-                e.preventDefault();
-            }
-            
-            function touchMoveResize(e) {
-                if (!isResizing || !e.touches[0]) return;
-                
-                const touch = e.touches[0];
-                const dx = touch.clientX - startX;
-                const dy = touch.clientY - startY;
-                
-                // Calculate new size while maintaining aspect ratio
-                const aspectRatio = startWidth / startHeight;
-                const newWidth = Math.max(40, startWidth + dx);
-                const newHeight = Math.max(40, newWidth / aspectRatio);
-                
-                element.style.width = `${newWidth}px`;
-                element.style.height = `${newHeight}px`;
-                
-                e.preventDefault();
-            }
-            
-            // Stop functions
-            function stopDrag(e) {
-                if (isDragging) {
-                    isDragging = false;
-                    document.removeEventListener('mousemove', moveDrag);
-                    document.removeEventListener('touchmove', touchMoveDrag);
-                    document.removeEventListener('mouseup', stopDrag);
-                    document.removeEventListener('touchend', stopDrag);
-                }
-            }
-            
-            function stopRotate(e) {
-                if (isRotating) {
-                    isRotating = false;
-                    document.removeEventListener('mousemove', moveRotate);
-                    document.removeEventListener('touchmove', touchMoveRotate);
-                    document.removeEventListener('mouseup', stopRotate);
-                    document.removeEventListener('touchend', stopRotate);
-                }
-            }
-            
-            function stopResize(e) {
-                if (isResizing) {
-                    isResizing = false;
-                    document.removeEventListener('mousemove', moveResize);
-                    document.removeEventListener('touchmove', touchMoveResize);
-                    document.removeEventListener('mouseup', stopResize);
-                    document.removeEventListener('touchend', stopResize);
-                }
-            }
-        }
-        
-        // Select a placed item for manipulation
-        function selectPlacedItem(element) {
-            console.log("Selected placed item:", element.id);
-            
-            // Deselect previous item
-            if (selectedPlacedItem) {
-                selectedPlacedItem.style.border = 'none';
-                selectedPlacedItem.style.zIndex = '5';
-            }
-            
-            // Select new item
-            selectedPlacedItem = element;
-            selectedPlacedItem.style.border = '2px solid #34C759';
-            selectedPlacedItem.style.zIndex = '10';
-            
-            // Show controls
-            itemControls.style.display = 'flex';
-            updateControlButtons();
-        }
-        
-        // Delete a placed item
-        function deletePlacedItem(id, type) {
-            console.log("Deleting placed item:", id);
-            
-            // Remove from DOM
-            const element = document.getElementById(id);
-            if (element) {
-                element.remove();
-            }
-            
-            // Remove from tracking
-            if (type === 'laptop') {
-                placedItems.laptop = placedItems.laptop.filter(item => item.id !== id);
-            } else {
-                placedItems.other = placedItems.other.filter(item => item.id !== id);
-            }
-            
-            // Reset selection if this was the selected item
-            if (selectedPlacedItem && selectedPlacedItem.id === id) {
-                selectedPlacedItem = null;
-                itemControls.style.display = 'none';
-            }
-        }
-        
-        // Update control buttons based on current mode
-        function updateControlButtons() {
-            if (interactionMode === 'move') {
-                moveButton.classList.add('active');
-                rotateButton.classList.remove('active');
-            } else {
-                rotateButton.classList.add('active');
-                moveButton.classList.remove('active');
-            }
-        }
-        
-        // Switch to other items tray
-        function switchToOtherItemsTray() {
-            console.log("Switching to other items tray");
-            
-            // Clear the tray visualizer
-            while (trayVisualizer.firstChild) {
-                trayVisualizer.removeChild(trayVisualizer.firstChild);
-            }
-            
-            currentTrayMode = 'other';
-            updateItemSelection();
-            doneButton.style.display = 'block';
-            itemControls.style.display = 'none';
-            selectedPlacedItem = null;
-            
-            showFeedback('Now place your other items in this tray');
-        }
-        
-        // Show feedback message
-        function showFeedback(message, isSuccess = true) {
-            console.log("Feedback:", message);
-            
-            feedbackMessage.textContent = message;
-            feedbackMessage.style.backgroundColor = isSuccess ? 
-                'rgba(52, 199, 89, 0.9)' : 'rgba(255, 59, 48, 0.9)';
-            
-            feedbackMessage.classList.add('visible');
-            
-            setTimeout(() => {
-                feedbackMessage.classList.remove('visible');
-            }, 3000);
-        }
-        
-        // Reset the experience
-        function resetExperience() {
-            console.log("Resetting experience");
-            
-            // Clear the tray visualizer
-            while (trayVisualizer.firstChild) {
-                trayVisualizer.removeChild(trayVisualizer.firstChild);
-            }
-            
-            // Reset data
-            currentTrayMode = 'laptop';
-            placedItems = {
-                laptop: [],
-                other: []
-            };
-            selectedItem = null;
-            selectedPlacedItem = null;
-            placedItemId = 0;
-            
-            // Reset UI
-            completeMessage.style.display = 'none';
-            itemControls.style.display = 'none';
-            
-            // Return to start screen
-            initialInstruction.style.display = 'block';
-            sceneContainer.style.display = 'none';
-            instructionsPanel.style.display = 'none';
-            itemSelection.style.display = 'none';
-            trayMode.style.display = 'none';
-            progressButton.style.display = 'none';
-            doneButton.style.display = 'none';
-            bgSelector.style.display = 'none';
-        }
-        
-        // Initialize the app when page loads
-        window.addEventListener('load', initializeApp);
+        // Log AR status
+        viewer.addEventListener('ar-status', event => {
+            console.log(event.detail.status);
+        });
     </script>
 </body>
 </html>
