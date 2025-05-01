@@ -13,63 +13,10 @@
             padding: 0;
             background-color: #f5f5f5;
         }
-        .container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+        
         model-viewer {
             width: 100%;
-            height: 90vh;
-            background-color: #f5f5f5;
-        }
-        
-        .ar-button {
-            background-color: #34C759;
-            color: white;
-            border-radius: 8px;
-            border: none;
-            position: absolute;
-            left: 50%;
-            bottom: 50px;
-            transform: translateX(-50%);
-            padding: 12px 24px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 700;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            z-index: 10;
-        }
-        
-        .item-selection {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 10px;
-            z-index: 10;
-            background-color: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(5px);
-        }
-        
-        .item-button {
-            background-color: white;
-            border-radius: 8px;
-            border: none;
-            padding: 8px 16px;
-            font-family: 'Inter', sans-serif;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            cursor: pointer;
-        }
-        
-        .item-button.active {
-            background-color: #34C759;
-            color: white;
+            height: 85vh;
         }
         
         .tray-info {
@@ -77,79 +24,100 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.8);
-            padding: 8px 16px;
-            border-radius: 8px;
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
             font-weight: bold;
             z-index: 10;
-            text-align: center;
+        }
+        
+        .button-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background-color: white;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            border-top: 1px solid #ddd;
+        }
+        
+        .nav-button {
+            flex: 1;
+            margin: 0 10px;
+            padding: 12px;
+            border-radius: 30px;
+            border: none;
+            background-color: white;
+            color: #3991f8;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .nav-button.active {
+            background-color: #77ca64;
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="tray-info" id="trayInfo">Laptop Tray</div>
-        
-        <model-viewer 
-            id="viewer"
-            src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-            ar
-            ar-modes="webxr scene-viewer quick-look"
-            camera-controls
-            auto-rotate>
-            
-            <button slot="ar-button" class="ar-button">
-                View in Your Space
-            </button>
-        </model-viewer>
-        
-        <div class="item-selection" id="itemSelection">
-            <button class="item-button active" data-model="laptop">Laptop</button>
-            <button class="item-button" data-model="phone">Phone</button>
-            <button class="item-button" data-model="other">Other Items</button>
-        </div>
+    <div class="tray-info" id="trayInfo">Laptop Tray</div>
+    
+    <model-viewer 
+        id="arViewer"
+        src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+        camera-controls
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        shadow-intensity="1"
+        ar-scale="fixed"
+        auto-rotate>
+    </model-viewer>
+    
+    <div class="button-bar">
+        <button class="nav-button active" id="laptopButton">Laptop</button>
+        <button class="nav-button" id="otherButton">Other Items</button>
     </div>
     
     <script>
-        // Get DOM elements
-        const viewer = document.getElementById('viewer');
-        const itemSelection = document.getElementById('itemSelection');
+        // DOM Elements
+        const arViewer = document.getElementById('arViewer');
         const trayInfo = document.getElementById('trayInfo');
+        const laptopButton = document.getElementById('laptopButton');
+        const otherButton = document.getElementById('otherButton');
         
         // Available 3D models
         const models = {
             laptop: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
-            phone: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
             other: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb'
         };
         
-        // Handle item selection
-        const buttons = document.querySelectorAll('.item-button');
-        buttons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Update active button
-                buttons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-                
-                // Get model type
-                const modelType = button.getAttribute('data-model');
-                
-                // Update model
-                viewer.src = models[modelType];
-                
-                // Update tray info
-                if (modelType === 'laptop') {
-                    trayInfo.textContent = 'Laptop Tray';
-                } else {
-                    trayInfo.textContent = 'Other Items Tray';
-                }
-            });
+        // Handle button clicks
+        laptopButton.addEventListener('click', () => {
+            switchMode('laptop');
         });
         
-        // Log AR status
-        viewer.addEventListener('ar-status', event => {
-            console.log(event.detail.status);
+        otherButton.addEventListener('click', () => {
+            switchMode('other');
         });
+        
+        // Switch between modes
+        function switchMode(mode) {
+            // Update UI
+            laptopButton.classList.remove('active');
+            otherButton.classList.remove('active');
+            
+            if (mode === 'laptop') {
+                laptopButton.classList.add('active');
+                trayInfo.textContent = 'Laptop Tray';
+                arViewer.src = models.laptop;
+            } else {
+                otherButton.classList.add('active');
+                trayInfo.textContent = 'Other Items Tray';
+                arViewer.src = models.other;
+            }
+        }
     </script>
 </body>
 </html>
