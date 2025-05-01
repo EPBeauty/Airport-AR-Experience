@@ -3,581 +3,560 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Airport Security AR Guide</title>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <title>Airport Security Guide</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        :root {
-            --primary-green: #34C759;
-            --light-gray: #D9D9D9;
-            --black: #000000;
-            --white: #FFFFFF;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
         }
         
         body {
             font-family: 'Inter', sans-serif;
-            margin: 0;
+            background-color: white;
+            color: #000;
+            min-height: 100vh;
             padding: 0;
-            position: relative;
-            height: 100vh;
-            width: 100%;
-            overflow: hidden;
-            color: var(--black);
-            touch-action: none;
-            -webkit-touch-callout: none;
+            margin: 0;
+            overflow-x: hidden;
             -webkit-user-select: none;
             user-select: none;
         }
         
-        model-viewer {
-            width: 100%;
-            height: 100vh;
-            background-color: transparent;
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #000;
+            color: white;
+            padding: 5px 15px;
+            height: 50px;
+            font-size: 14px;
         }
         
-        .instructions-panel {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            max-width: 90%;
-            z-index: 100;
-            text-align: center;
-        }
-        
-        .instructions-panel h2 {
-            margin-top: 0;
-            color: var(--black);
-            font-size: 1.4rem;
+        .status-bar .time {
             font-weight: 600;
         }
         
-        .instructions-panel p {
-            color: var(--black);
-            font-size: 1rem;
-            line-height: 1.5;
-            font-weight: 400;
-        }
-        
-        .item-selection {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
+        .status-bar .right-icons {
             display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 10px;
-            z-index: 10;
-            background-color: rgba(255, 255, 255, 0.7);
-            border-top-left-radius: 15px;
-            border-top-right-radius: 15px;
-            backdrop-filter: blur(5px);
+            gap: 5px;
         }
         
-        .item-button {
-            background-color: var(--white);
-            border-radius: 10px;
-            border: none;
-            padding: 10px;
-            width: 80px;
-            height: 80px;
+        .back-button {
+            position: absolute;
+            top: 70px;
+            left: 15px;
+            background-color: white;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 5;
+        }
+        
+        .back-button img {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .main-container {
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            font-family: 'Inter', sans-serif;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
-            position: relative;
+            padding-top: 60px;
         }
         
-        .item-button img {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
+        .instruction-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
         
-        .item-button span {
-            margin-top: 5px;
-            font-size: 12px;
-            font-weight: 500;
+        .instruction-card h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .tray-type {
+            background-color: #34C759;
+            color: white;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 30px;
+            margin: 10px auto;
+            display: inline-block;
+        }
+        
+        .instruction-card p {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-top: 15px;
         }
         
         .tray-outline {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 40%;
+            width: 90%;
+            max-width: 600px;
+            aspect-ratio: 16/9;
             border: 3px dashed #34C759;
-            border-radius: 10px;
-            pointer-events: none;
-            z-index: 5;
-            box-shadow: 0 0 10px rgba(52, 199, 89, 0.3);
-        }
-        
-        .next-tray-button {
-            position: absolute;
-            bottom: 120px;
-            right: 20px;
-            background-color: var(--primary-green);
-            color: var(--white);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-            cursor: pointer;
-            z-index: 100;
-        }
-        
-        .tray-mode {
-            position: absolute;
-            top: 85px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(52, 199, 89, 0.9);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            z-index: 100;
-            text-align: center;
+            border-radius: 15px;
+            margin: 10px 0 30px 0;
+            position: relative;
         }
         
         .item-in-tray {
             position: absolute;
-            pointer-events: auto;
-            z-index: 20;
-            transition: transform 0.2s ease;
-        }
-        
-        .item-in-tray img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-        
-        .reset-button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: var(--white);
-            color: var(--black);
-            border: none;
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            cursor: pointer;
-            z-index: 150;
+            flex-direction: column;
+        }
+        
+        .item-in-tray .item-label {
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        
+        .item-in-tray .icon {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #4a90e2;
+            background-color: #e6f0fa;
+            border-radius: 5px;
+            color: #4a90e2;
+        }
+        
+        .item-selection {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+        
+        .item-button {
+            width: 90px;
+            height: 110px;
+            background: white;
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 10px;
+        }
+        
+        .item-button .icon {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #4a90e2;
+            background-color: #e6f0fa;
+            border-radius: 5px;
+            color: #4a90e2;
+        }
+        
+        .item-button .name {
+            color: #4a90e2;
+            font-weight: 600;
+        }
+        
+        .next-button {
+            background-color: #34C759;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 15px 25px;
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .navbar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: #f9f9f9;
+            border-top: 1px solid #ddd;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .navbar-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            color: #4a90e2;
+        }
+        
+        .navbar-button img {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .address-bar {
+            position: fixed;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            height: 45px;
+            background-color: #f1f1f1;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .address-bar .text {
+            flex: 1;
+            background-color: #ddd;
+            border-radius: 10px;
+            padding: 8px 15px;
+            margin: 0 10px;
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+        }
+        
+        /* Specific item positions in tray */
+        #bag-in-tray {
+            width: 120px;
+            height: 70px;
+            top: 5%;
+            left: 5%;
+        }
+        
+        #phone-in-tray-1 {
+            width: 60px;
+            height: 100px;
+            top: 10%;
+            left: 45%;
+        }
+        
+        #keys-in-tray {
+            width: 60px;
+            height: 60px;
+            bottom: 25%;
+            left: 45%;
+        }
+        
+        #watch-in-tray {
+            width: 80px;
+            height: 80px;
+            bottom: 20%;
+            right: 15%;
+        }
+        
+        #phone-in-tray-2 {
+            width: 70px;
+            height: 70px;
+            top: 15%;
+            right: 15%;
         }
     </style>
 </head>
 <body>
-    <!-- Main AR viewer - activated immediately -->
-    <model-viewer 
-        id="arViewer"
-        camera-controls
-        ar
-        ar-modes="webxr scene-viewer quick-look"
-        ar-scale="fixed"
-        interaction-prompt="none"
-        shadow-intensity="1"
-        autoplay
-        environment-image="neutral">
-    </model-viewer>
-    
-    <div class="instructions-panel">
-        <h2>Place Items in Security Tray</h2>
-        <p>Tap items below to position in your real tray</p>
+    <!-- Status bar (iPhone style) -->
+    <div class="status-bar">
+        <div class="left">
+            <span class="time">7:20</span>
+            <span class="app">WhatsApp</span>
+        </div>
+        <div class="right-icons">
+            <span class="signal">•••</span>
+            <span class="wifi">WiFi</span>
+            <span class="battery">🔋</span>
+        </div>
     </div>
     
-    <div class="tray-mode" id="trayMode">
-        Regular Items Tray
+    <!-- Back button -->
+    <div class="back-button">
+        <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXJlZnJlc2gtY2N3Ij48cGF0aCBkPSJNMy4wNSA5YTkgOSAwIDEgMSAxLjQyIDQuNSIvPjxwYXRoIGQ9Ik04LjUgNS41IEwgMy41IDlMMSA1LjUiLz48L3N2Zz4=" alt="Back">
     </div>
     
-    <div class="tray-outline"></div>
+    <div class="main-container">
+        <!-- Instruction card -->
+        <div class="instruction-card">
+            <h1>Place Items in Security Tray</h1>
+            <div class="tray-type">Regular Items Tray</div>
+            <p>Tap items below to position in your real tray</p>
+        </div>
+        
+        <!-- Tray outline with items -->
+        <div class="tray-outline" id="trayOutline">
+            <!-- Items will be added here when clicked -->
+            <div class="item-in-tray" id="bag-in-tray">
+                <span class="item-label">Bag</span>
+                <div class="icon">?</div>
+            </div>
+            
+            <div class="item-in-tray" id="phone-in-tray-1">
+                <div class="icon">?</div>
+            </div>
+            
+            <div class="item-in-tray" id="keys-in-tray">
+                <div class="icon">?</div>
+            </div>
+            
+            <div class="item-in-tray" id="watch-in-tray">
+                <div class="icon">?</div>
+            </div>
+            
+            <div class="item-in-tray" id="phone-in-tray-2">
+                <div class="icon">?</div>
+            </div>
+        </div>
+        
+        <!-- Item selection buttons -->
+        <div class="item-selection" id="itemSelection">
+            <button class="item-button" id="bagButton">
+                <div class="icon">?</div>
+                <span class="name">Bag</span>
+            </button>
+            
+            <button class="item-button" id="phoneButton">
+                <div class="icon">?</div>
+                <span class="name">Phone</span>
+            </button>
+            
+            <button class="item-button" id="keysButton">
+                <div class="icon">?</div>
+                <span class="name">Keys</span>
+            </button>
+            
+            <button class="item-button" id="watchButton">
+                <div class="icon">?</div>
+                <span class="name">Watch</span>
+            </button>
+        </div>
+        
+        <!-- Next button -->
+        <button class="next-button" id="nextButton">
+            Continue to Laptop Tray
+        </button>
+    </div>
     
-    <button class="reset-button" id="resetButton">↺</button>
+    <!-- Address bar (Safari style) -->
+    <div class="address-bar">
+        <div class="text">epbeauty.github.io</div>
+    </div>
     
-    <button class="next-tray-button" id="nextTrayButton">
-        Continue to Next Tray
-    </button>
-    
-    <div class="item-selection" id="itemSelection">
-        <!-- Items will be populated by JavaScript -->
+    <!-- Navigation bar (Safari style) -->
+    <div class="navbar">
+        <div class="navbar-button">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTkwZTIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jaGV2cm9uLWxlZnQiPjxwb2x5bGluZSBwb2ludHM9IjE1IDE4IDkgMTIgMTUgNiIvPjwvc3ZnPg==" alt="Back">
+        </div>
+        <div class="navbar-button">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTkwZTIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1jaGV2cm9uLXJpZ2h0Ij48cG9seWxpbmUgcG9pbnRzPSI5IDE4IDE1IDEyIDkgNiIvPjwvc3ZnPg==" alt="Forward">
+        </div>
+        <div class="navbar-button">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTkwZTIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1zaGFyZSI+PHBhdGggZD0iTTQgMTJ2OGEyIDIgMCAwIDAgMiAyaDEyYTIgMiAwIDAgMCAyLTJ2LTgiLz48cG9seWxpbmUgcG9pbnRzPSIxNiA2IDEyIDIgOCA2Ii8+PHBvbHlsaW5lIHBvaW50cz0iMTIgNiAxMiAxNSIvPjwvc3ZnPg==" alt="Share">
+        </div>
+        <div class="navbar-button">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTkwZTIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1ib29rLW9wZW4iPjxwYXRoIGQ9Ik0yIDMuNUE0LjUgNC41IDAgMCAxIDYuNSAzSDIwYTIgMiAwIDAgMSAyIDJ2MTRhMiAyIDAgMCAxLTIgMkgyLjVBMi41IDIuNSAwIDAgMCAwIDE5LjV2LTE1QTAuNSAwLjUgMCAwIDEgLjUgNEgyIEwgMSAzIiAvPjxwYXRoIGQ9Ik02LjUgM2ExLjUgMS41IDAgMCAxIDEuNSAxLjV2MTRhMS41IDEuNSAwIDAgMS0xLjUgMS41IEwgNiAyMC41Ii8+PC9zdmc+" alt="Book">
+        </div>
+        <div class="navbar-button">
+            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM0YTkwZTIiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBjbGFzcz0ibHVjaWRlIGx1Y2lkZS1saXN0Ij48cmVjdCB4PSIzIiB5PSIxMiIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiLz48cmVjdCB4PSIxNSIgeT0iNiIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiLz48cmVjdCB4PSIxNSIgeT0iMTYiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIHJ4PSIxIi8+PHJlY3QgeD0iMyIgeT0iNiIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiLz48L3N2Zz4=" alt="Tabs">
+        </div>
     </div>
     
     <script>
-        // The available items with their size and position settings
-        const items = [
-            { 
-                id: 'bag', 
-                name: 'Bag', 
-                type: 'other', 
-                image: 'bag.png',  // Use images instead of 3D models for simplicity
-                width: 120,
-                height: 100,
-                position: { x: 30, y: 30 }  // Default position in tray (percentage)
-            },
-            { 
-                id: 'phone', 
-                name: 'Phone', 
-                type: 'other', 
-                image: 'phone.png',
-                width: 40,
-                height: 80,
-                position: { x: 50, y: 40 }
-            },
-            { 
-                id: 'keys', 
-                name: 'Keys', 
-                type: 'other', 
-                image: 'keys.png',
-                width: 60,
-                height: 40,
-                position: { x: 70, y: 30 }
-            },
-            { 
-                id: 'laptop', 
-                name: 'Laptop', 
-                type: 'laptop', 
-                image: 'laptop.png',
-                width: 140,
-                height: 100,
-                position: { x: 50, y: 50 }
-            },
-            { 
-                id: 'watch', 
-                name: 'Watch', 
-                type: 'other', 
-                image: 'watch.png',
-                width: 50,
-                height: 50,
-                position: { x: 80, y: 70 }
-            },
-            { 
-                id: 'wallet', 
-                name: 'Wallet', 
-                type: 'other', 
-                image: 'wallet.png',
-                width: 70,
-                height: 50,
-                position: { x: 40, y: 70 }
-            }
-        ];
-        
-        // Current tray mode - start with regular items
-        let currentTrayMode = 'other';
-        
-        // Keep track of items in each tray
-        const itemsInTray = {
-            laptop: [],
-            other: []
-        };
-        
-        // DOM references
-        const itemSelection = document.getElementById('itemSelection');
-        const trayMode = document.getElementById('trayMode');
-        const resetButton = document.getElementById('resetButton');
-        const nextTrayButton = document.getElementById('nextTrayButton');
-        const arViewer = document.getElementById('arViewer');
-        const trayOutline = document.querySelector('.tray-outline');
-        
-        // Initialize by loading camera view immediately
-        function initializeApp() {
-            // Show tray type indicator
-            updateTrayModeDisplay();
+        // Simple script to handle item placement
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get all buttons
+            const bagButton = document.getElementById('bagButton');
+            const phoneButton = document.getElementById('phoneButton');
+            const keysButton = document.getElementById('keysButton');
+            const watchButton = document.getElementById('watchButton');
+            const nextButton = document.getElementById('nextButton');
+            const backButton = document.querySelector('.back-button');
             
-            // Start AR immediately
-            startARExperience();
+            // Item placement tracking
+            let itemsPlaced = {
+                bag: true,
+                phone: true,
+                keys: true,
+                watch: true
+            };
             
-            // Populate item selection
-            populateItemSelection();
+            // Make items draggable
+            const trayItems = document.querySelectorAll('.item-in-tray');
+            trayItems.forEach(makeItemDraggable);
             
-            // Set up event listeners
-            resetButton.addEventListener('click', resetTray);
-            nextTrayButton.addEventListener('click', switchTrayMode);
-            
-            // Hide next tray button initially (show when items are placed)
-            nextTrayButton.style.display = 'none';
-        }
-        
-        // Update the tray mode display
-        function updateTrayModeDisplay() {
-            if (currentTrayMode === 'laptop') {
-                trayMode.textContent = 'Laptop Tray';
-            } else {
-                trayMode.textContent = 'Regular Items Tray';
-            }
-        }
-        
-        // Start AR experience immediately
-        function startARExperience() {
-            // Find and click the AR button to activate camera
-            setTimeout(() => {
-                const arButton = document.querySelector('button[slot="ar-button"]');
-                if (arButton) {
-                    arButton.click();
-                }
-            }, 500);
-        }
-        
-        // Populate the item selection bar
-        function populateItemSelection() {
-            // Clear previous items
-            itemSelection.innerHTML = '';
-            
-            // Filter items by current tray mode
-            const currentItems = items.filter(item => {
-                if (currentTrayMode === 'laptop') {
-                    return item.type === 'laptop';
-                } else {
-                    return item.type === 'other';
-                }
+            // Button click handlers
+            bagButton.addEventListener('click', function() {
+                highlightItem('bag-in-tray');
             });
             
-            // Create buttons for each item
-            currentItems.forEach(item => {
-                const button = document.createElement('button');
-                button.className = 'item-button';
-                button.setAttribute('data-id', item.id);
+            phoneButton.addEventListener('click', function() {
+                highlightItem('phone-in-tray-1');
+                setTimeout(() => highlightItem('phone-in-tray-2'), 300);
+            });
+            
+            keysButton.addEventListener('click', function() {
+                highlightItem('keys-in-tray');
+            });
+            
+            watchButton.addEventListener('click', function() {
+                highlightItem('watch-in-tray');
+            });
+            
+            nextButton.addEventListener('click', function() {
+                alert('Switching to Laptop Tray...');
+                // Change instruction text
+                document.querySelector('.tray-type').textContent = 'Laptop Tray';
                 
-                // Use images instead of 3D models for preview
-                const img = document.createElement('img');
-                img.src = item.image;
-                img.alt = item.name;
+                // Clear existing items
+                clearTray();
                 
-                const span = document.createElement('span');
-                span.textContent = item.name;
+                // Change button text
+                nextButton.textContent = 'Complete Security Check';
+            });
+            
+            backButton.addEventListener('click', function() {
+                location.reload();
+            });
+            
+            // Highlight an item when its button is clicked
+            function highlightItem(itemId) {
+                const item = document.getElementById(itemId);
+                if (item) {
+                    item.style.boxShadow = '0 0 0 3px #34C759';
+                    setTimeout(() => {
+                        item.style.boxShadow = 'none';
+                    }, 800);
+                }
+            }
+            
+            // Make items draggable
+            function makeItemDraggable(element) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
                 
-                button.appendChild(img);
-                button.appendChild(span);
+                element.addEventListener('touchstart', dragStart, { passive: false });
+                element.addEventListener('mousedown', dragStart);
                 
-                // Add click event to add item to tray
-                button.addEventListener('click', () => {
-                    addItemToTray(item);
+                function dragStart(e) {
+                    e.preventDefault();
+                    
+                    // Get initial positions
+                    if (e.type === 'touchstart') {
+                        pos3 = e.touches[0].clientX;
+                        pos4 = e.touches[0].clientY;
+                        
+                        document.addEventListener('touchmove', dragMove, { passive: false });
+                        document.addEventListener('touchend', dragEnd);
+                    } else {
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+                        
+                        document.addEventListener('mousemove', dragMove);
+                        document.addEventListener('mouseup', dragEnd);
+                    }
+                    
+                    // Bring to front
+                    element.style.zIndex = '10';
+                }
+                
+                function dragMove(e) {
+                    e.preventDefault();
+                    
+                    // Calculate new positions
+                    if (e.type === 'touchmove') {
+                        pos1 = pos3 - e.touches[0].clientX;
+                        pos2 = pos4 - e.touches[0].clientY;
+                        pos3 = e.touches[0].clientX;
+                        pos4 = e.touches[0].clientY;
+                    } else {
+                        pos1 = pos3 - e.clientX;
+                        pos2 = pos4 - e.clientY;
+                        pos3 = e.clientX;
+                        pos4 = e.clientY;
+                    }
+                    
+                    // Set new position
+                    element.style.top = (element.offsetTop - pos2) + "px";
+                    element.style.left = (element.offsetLeft - pos1) + "px";
+                }
+                
+                function dragEnd() {
+                    // Clean up event listeners
+                    document.removeEventListener('mousemove', dragMove);
+                    document.removeEventListener('mouseup', dragEnd);
+                    document.removeEventListener('touchmove', dragMove);
+                    document.removeEventListener('touchend', dragEnd);
+                    
+                    // Reset z-index
+                    element.style.zIndex = '1';
+                    
+                    // Check if item is within bounds
+                    keepInBounds(element);
+                }
+                
+                // Keep element within tray bounds
+                function keepInBounds(el) {
+                    const tray = document.getElementById('trayOutline');
+                    const trayRect = tray.getBoundingClientRect();
+                    const elRect = el.getBoundingClientRect();
+                    
+                    // Check if element is outside tray
+                    if (elRect.left < trayRect.left) {
+                        el.style.left = '0px';
+                    }
+                    
+                    if (elRect.right > trayRect.right) {
+                        el.style.left = (trayRect.width - elRect.width) + 'px';
+                    }
+                    
+                    if (elRect.top < trayRect.top) {
+                        el.style.top = '0px';
+                    }
+                    
+                    if (elRect.bottom > trayRect.bottom) {
+                        el.style.top = (trayRect.height - elRect.height) + 'px';
+                    }
+                }
+            }
+            
+            // Clear all items from tray
+            function clearTray() {
+                const trayItems = document.querySelectorAll('.item-in-tray');
+                trayItems.forEach(item => {
+                    item.style.display = 'none';
                 });
-                
-                itemSelection.appendChild(button);
-            });
-        }
-        
-        // Add an item to the tray
-        function addItemToTray(item) {
-            // Create the item element
-            const itemElement = document.createElement('div');
-            itemElement.className = 'item-in-tray';
-            itemElement.setAttribute('data-id', item.id);
-            itemElement.setAttribute('data-type', item.type);
-            
-            // Set initial size
-            itemElement.style.width = `${item.width}px`;
-            itemElement.style.height = `${item.height}px`;
-            
-            // Add the image
-            const img = document.createElement('img');
-            img.src = item.image;
-            img.alt = item.name;
-            itemElement.appendChild(img);
-            
-            // Position within tray
-            const trayRect = trayOutline.getBoundingClientRect();
-            const left = trayRect.left + (trayRect.width * (item.position.x / 100)) - (item.width / 2);
-            const top = trayRect.top + (trayRect.height * (item.position.y / 100)) - (item.height / 2);
-            
-            itemElement.style.left = `${left}px`;
-            itemElement.style.top = `${top}px`;
-            
-            // Make item draggable within tray
-            makeItemDraggable(itemElement);
-            
-            // Add to DOM
-            document.body.appendChild(itemElement);
-            
-            // Track item in the appropriate tray
-            if (item.type === 'laptop') {
-                itemsInTray.laptop.push(item);
-            } else {
-                itemsInTray.other.push(item);
             }
-            
-            // Check if we should show the next tray button
-            updateNextTrayButton();
-        }
-        
-        // Make an item draggable within the tray
-        function makeItemDraggable(element) {
-            let isDragging = false;
-            let startX, startY;
-            let offsetX = 0, offsetY = 0;
-            
-            element.addEventListener('touchstart', dragStart, { passive: false });
-            element.addEventListener('touchmove', drag, { passive: false });
-            element.addEventListener('touchend', dragEnd);
-            
-            // For desktop testing
-            element.addEventListener('mousedown', dragStartMouse);
-            document.addEventListener('mousemove', dragMouse);
-            document.addEventListener('mouseup', dragEnd);
-            
-            function dragStart(e) {
-                e.preventDefault();
-                isDragging = true;
-                
-                startX = e.touches[0].clientX - offsetX;
-                startY = e.touches[0].clientY - offsetY;
-                
-                element.style.zIndex = '30';
-            }
-            
-            function dragStartMouse(e) {
-                e.preventDefault();
-                isDragging = true;
-                
-                startX = e.clientX - offsetX;
-                startY = e.clientY - offsetY;
-                
-                element.style.zIndex = '30';
-            }
-            
-            function drag(e) {
-                if (!isDragging) return;
-                e.preventDefault();
-                
-                offsetX = e.touches[0].clientX - startX;
-                offsetY = e.touches[0].clientY - startY;
-                
-                element.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-            }
-            
-            function dragMouse(e) {
-                if (!isDragging) return;
-                
-                offsetX = e.clientX - startX;
-                offsetY = e.clientY - startY;
-                
-                element.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
-            }
-            
-            function dragEnd() {
-                if (!isDragging) return;
-                isDragging = false;
-                
-                // Ensure item stays within tray bounds
-                const trayRect = trayOutline.getBoundingClientRect();
-                const itemRect = element.getBoundingClientRect();
-                
-                // Calculate center position
-                const centerX = itemRect.left + (itemRect.width / 2);
-                const centerY = itemRect.top + (itemRect.height / 2);
-                
-                // Check if item is mostly in tray
-                if (centerX < trayRect.left || centerX > trayRect.right || 
-                    centerY < trayRect.top || centerY > trayRect.bottom) {
-                    // Reset position if outside tray
-                    offsetX = 0;
-                    offsetY = 0;
-                    element.style.transform = 'translate(0px, 0px)';
-                }
-                
-                element.style.zIndex = '20';
-            }
-        }
-        
-        // Update visibility of next tray button
-        function updateNextTrayButton() {
-            if (currentTrayMode === 'other' && itemsInTray.other.length > 0) {
-                nextTrayButton.style.display = 'block';
-                nextTrayButton.textContent = 'Continue to Laptop Tray';
-            } else if (currentTrayMode === 'laptop' && itemsInTray.laptop.length > 0) {
-                nextTrayButton.style.display = 'block';
-                nextTrayButton.textContent = 'Complete Security Check';
-            } else {
-                nextTrayButton.style.display = 'none';
-            }
-        }
-        
-        // Switch between tray modes
-        function switchTrayMode() {
-            if (currentTrayMode === 'other') {
-                // Switch to laptop tray
-                currentTrayMode = 'laptop';
-                clearCurrentTrayItems();
-                updateTrayModeDisplay();
-                populateItemSelection();
-                updateNextTrayButton();
-            } else {
-                // Complete the experience
-                alert('Security check complete! All items have been properly placed.');
-                resetExperience();
-            }
-        }
-        
-        // Clear items from the current tray
-        function clearCurrentTrayItems() {
-            // Remove elements from DOM
-            document.querySelectorAll('.item-in-tray').forEach(item => {
-                const type = item.getAttribute('data-type');
-                if (type === currentTrayMode) {
-                    item.remove();
-                }
-            });
-        }
-        
-        // Reset the current tray
-        function resetTray() {
-            // Clear current tray only
-            clearCurrentTrayItems();
-            
-            // Reset tracking for current tray type
-            if (currentTrayMode === 'laptop') {
-                itemsInTray.laptop = [];
-            } else {
-                itemsInTray.other = [];
-            }
-            
-            updateNextTrayButton();
-        }
-        
-        // Reset the entire experience
-        function resetExperience() {
-            // Clear all items
-            document.querySelectorAll('.item-in-tray').forEach(item => {
-                item.remove();
-            });
-            
-            // Reset tracking
-            itemsInTray.laptop = [];
-            itemsInTray.other = [];
-            
-            // Start with other items tray
-            currentTrayMode = 'other';
-            updateTrayModeDisplay();
-            populateItemSelection();
-            updateNextTrayButton();
-        }
-        
-        // Initialize the app when loaded
-        window.addEventListener('DOMContentLoaded', initializeApp);
+        });
     </script>
 </body>
 </html>
