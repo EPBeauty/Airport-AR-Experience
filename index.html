@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Airport Security AR Guide</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --primary-green: #34C759;
+            --light-gray: #D9D9D9;
+            --black: #000000;
+            --white: #FFFFFF;
+        }
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            color: var(--black);
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        model-viewer {
+            width: 100%;
+            height: 100vh;
+            background-color: transparent;
+        }
+        
+        .ar-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border-radius: 8px;
+            border: none;
+            position: absolute;
+            left: 50%;
+            bottom: 50px;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 10;
+        }
+        
+        .instructions-panel {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+            z-index: 100;
+            text-align: center;
+        }
+        
+        .instructions-panel h2 {
+            margin-top: 0;
+            color: var(--black);
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .instructions-panel p {
+            color: var(--black);
+            font-size: 1rem;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+        
+        .item-selection {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px;
+            z-index: 10;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+        
+        .item-button {
+            background-color: var(--white);
+            border-radius: 10px;
+            border: none;
+            padding: 10px;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .item-button model-viewer {
+            width: 100%;
+            height: 60px;
+        }
+        
+        .item-name {
+            margin-top: 5px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .tray-indicator {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.6);
+            color: var(--white);
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            z-index: 5;
+        }
+        
+        .tray-outline {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 75%;
+            height: 30%;
+            border: 3px dashed var(--light-gray);
+            border-radius: 10px;
+            z-index: 4;
+            pointer-events: none;
+        }
+        
+        /* Initial positioning guide */
+        .positioning-guide {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--white);
+        }
+        
+        .positioning-guide h2 {
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 0 20px;
+            font-weight: 600;
+        }
+        
+        .positioning-guide-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 90%;
+        }
+        
+        .positioning-guide p {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 0 20px;
+            font-weight: 400;
+        }
+        
+        .positioning-guide button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 20px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .complete-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 120;
+            display: none;
+        }
+        
+        .complete-message h2 {
+            color: var(--black);
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        .complete-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 15px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .next-tray-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 120;
+            display: none;
+        }
+        
+        .next-tray-message h2 {
+            color: var(--black);
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        .next-tray-button {
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            margin-top: 15px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Progress button that appears after placing items */
+        .progress-button {
+            position: absolute;
+            bottom: 120px;
+            right: 20px;
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+        }
+        
+        .item-in-tray {
+            position: absolute;
+            z-index: 20;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Initial positioning guide -->
+    <div class="positioning-guide" id="positioningGuide">
+        <div class="positioning-guide-content">
+            <h2>Position Your Security Tray</h2>
+            <p>Place a security tray in front of you where indicated:</p>
+            <div style="position: relative; width: 90%; height: 200px; margin: 20px 0; border: 2px dashed var(--light-gray); border-radius: 10px; display: flex; justify-content: center; align-items: center;">
+                <div style="width: 70%; height: 70%; background-color: rgba(255,255,255,0.1); border-radius: 5px; position: relative;">
+                    <div style="position: absolute; top: -25px; width: 100%; text-align: center; font-size: 14px;">Position Tray Here</div>
+                </div>
+            </div>
+            <p>Select items to place in the tray. Laptops must be in a separate tray.</p>
+            <button id="startARButton">I'm Ready</button>
+        </div>
+    </div>
+    
+    <div class="instructions-panel">
+        <div class="instruction-step" id="mainInstruction">
+            <h2>Place Items in Security Tray</h2>
+            <p>Select an item below to place it in the tray.</p>
+        </div>
+    </div>
+    
+    <div class="tray-indicator" id="trayIndicator">Position Your Tray Here</div>
+    
+    <div class="tray-outline" id="trayOutline"></div>
+    
+    <div class="complete-message" id="completeMessage">
+        <h2>Security Check Complete!</h2>
+        <p>You've successfully arranged your items for airport security screening.</p>
+        <button class="complete-button" id="restartButton">Start Over</button>
+    </div>
+    
+    <div class="next-tray-message" id="nextTrayMessage">
+        <h2>Now Use A Different Tray</h2>
+        <p>Replace your current tray with a new one for the remaining items.</p>
+        <button class="next-tray-button" id="nextTrayButton">I've Placed A New Tray</button>
+    </div>
+    
+    <button class="progress-button" id="progressButton">Continue to Next Tray</button>
+    
+    <div class="item-selection" id="itemSelection">
+        <!-- Item buttons will be added here -->
+    </div>
+    
+    <model-viewer 
+        id="arViewer"
+        camera-controls
+        ar
+        ar-modes="webxr scene-viewer quick-look"
+        ar-scale="fixed"
+        interaction-prompt="none"
+        shadow-intensity="1"
+        environment-image="neutral">
+        
+        <button slot="ar-button" class="ar-button">
+            Start AR Experience
+        </button>
+    </model-viewer>
+    
+    <script>
+        // Available items with correct proportions
+        const items = [
+            { id: 'laptop', name: 'Laptop', type: 'laptop', model: 'laptop.glb', scale: '0.8 0.8 0.8', width: 200, height: 120 },
+            { id: 'phone', name: 'Phone', type: 'other', model: 'phone.glb', scale: '0.6 0.6 0.6', width: 60, height: 120 },
+            { id: 'charger', name: 'Charger', type: 'other', model: 'charger.glb', scale: '0.4 0.4 0.4', width: 60, height: 60 }, // CHARGER IS SMALL
+            { id: 'bag', name: 'Bag', type: 'other', model: 'bag.glb', scale: '0.7 0.7 0.7', width: 140, height: 140 },
+            { id: 'hat', name: 'Hat', type: 'other', model: 'hat.glb', scale: '0.5 0.5 0.5', width: 120, height: 70 },
+            { id: 'keys', name: 'Keys', type: 'other', model: 'keys.glb', scale: '0.4 0.4 0.4', width: 50, height: 30 }
+        ];
+        
+        // Track current tray type
+        let currentTrayType = null;
+        
+        // Track current phase
+        let currentPhase = 1;
+        
+        // Track items in each category
+        const laptopItems = items.filter(item => item.type === 'laptop');
+        const otherItems = items.filter(item => item.type === 'other');
+        
+        // Track items currently in the tray
+        let laptopItemsPlaced = [];
+        let otherItemsPlaced = [];
+        
+        // DOM Elements
+        const mainARViewer = document.getElementById('arViewer');
+        const positioningGuide = document.getElementById('positioningGuide');
+        const startARButton = document.getElementById('startARButton');
+        const itemSelection = document.getElementById('itemSelection');
+        const trayIndicator = document.getElementById('trayIndicator');
+        const completeMessage = document.getElementById('completeMessage');
+        const restartButton = document.getElementById('restartButton');
+        const nextTrayMessage = document.getElementById('nextTrayMessage');
+        const nextTrayButton = document.getElementById('nextTrayButton');
+        const progressButton = document.getElementById('progressButton');
+        const trayOutline = document.getElementById('trayOutline');
+        
+        // Start AR button
+        startARButton.addEventListener('click', () => {
+            positioningGuide.style.display = 'none';
+            startLaptopTray();
+        });
+        
+        // Restart button
+        restartButton.addEventListener('click', () => {
+            resetExperience();
+        });
+        
+        // Next tray button
+        nextTrayButton.addEventListener('click', () => {
+            nextTrayMessage.style.display = 'none';
+            prepareForNextTray();
+        });
+        
+        // Progress button
+        progressButton.addEventListener('click', () => {
+            progressButton.style.display = 'none';
+            nextTrayMessage.style.display = 'block';
+        });
+        
+        // Start with laptop tray
+        function startLaptopTray() {
+            currentTrayType = 'laptop';
+            updateTrayType();
+            initializeItems();
+        }
+        
+        // Initialize item selection
+        function initializeItems() {
+            // Clear previous items
+            itemSelection.innerHTML = '';
+            
+            // Show items based on current tray type
+            let availableItems;
+            
+            if (currentTrayType === 'laptop') {
+                availableItems = laptopItems.filter(item => 
+                    !laptopItemsPlaced.some(placed => placed.id === item.id)
+                );
+            } else {
+                availableItems = otherItems.filter(item => 
+                    !otherItemsPlaced.some(placed => placed.id === item.id)
+                );
+            }
+            
+            // If no items left for this category, check if we need to move to next phase
+            if (availableItems.length === 0) {
+                if (currentTrayType === 'laptop' && laptopItemsPlaced.length > 0) {
+                    progressButton.style.display = 'block';
+                } else if (currentTrayType === 'other' && otherItemsPlaced.length > 0) {
+                    completeMessage.style.display = 'block';
+                }
+                return;
+            }
+            
+            // Create a button for each available item
+            availableItems.forEach(item => {
+                const button = document.createElement('button');
+                button.className = 'item-button';
+                button.setAttribute('data-id', item.id);
+                button.setAttribute('data-type', item.type);
+                
+                // Create thumbnail with model-viewer
+                const modelViewer = document.createElement('model-viewer');
+                modelViewer.src = item.model;
+                modelViewer.setAttribute('auto-rotate', 'true');
+                modelViewer.setAttribute('camera-controls', 'false');
+                modelViewer.setAttribute('ar', 'false');
+                modelViewer.setAttribute('scale', item.scale);
+                
+                // Add name label
+                const nameLabel = document.createElement('div');
+                nameLabel.className = 'item-name';
+                nameLabel.textContent = item.name;
+                
+                button.appendChild(modelViewer);
+                button.appendChild(nameLabel);
+                
+                // Add click event - simply place items directly
+                button.addEventListener('click', () => {
+                    placeItemInTray(item);
+                });
+                
+                itemSelection.appendChild(button);
+            });
+        }
+        
+        // Update tray indicator text
+        function updateTrayType() {
+            if (currentTrayType === 'laptop') {
+                trayIndicator.textContent = 'Laptop Tray';
+            } else {
+                trayIndicator.textContent = 'Other Items Tray';
+            }
+        }
+        
+        // Place item in tray when selected
+        function placeItemInTray(item) {
+            // Get tray position
+            const trayRect = trayOutline.getBoundingClientRect();
+            
+            // Create item element
+            const itemElement = document.createElement('div');
+            itemElement.className = 'item-in-tray';
+            itemElement.setAttribute('data-id', item.id);
+            itemElement.setAttribute('data-type', item.type);
+            
+            // Create model viewer
+            const modelViewer = document.createElement('model-viewer');
+            modelViewer.src = item.model;
+            modelViewer.setAttribute('camera-controls', 'false');
+            modelViewer.setAttribute('auto-rotate', 'false');
+            modelViewer.setAttribute('shadow-intensity', '1');
+            modelViewer.setAttribute('ar', 'false');
+            modelViewer.setAttribute('scale', item.scale);
+            
+            // Set size
+            modelViewer.style.width = `${item.width}px`;
+            modelViewer.style.height = `${item.height}px`;
+            
+            // Add outline to show it's placed
+            modelViewer.style.outline = '3px solid #34C759';
+            modelViewer.style.outlineOffset = '3px';
+            
+            // Add to item element
+            itemElement.appendChild(modelViewer);
+            
+            // Position items neatly in tray
+            let xPos, yPos;
+            
+            if (item.type === 'laptop') {
+                // Center the laptop
+                xPos = trayRect.left + (trayRect.width - item.width) / 2;
+                yPos = trayRect.top + (trayRect.height - item.height) / 2;
+            } else {
+                // Position other items in a grid
+                const otherItemsCount = document.querySelectorAll('.item-in-tray[data-type="other"]').length;
+                const itemsPerRow = 3;
+                const row = Math.floor(otherItemsCount / itemsPerRow);
+                const col = otherItemsCount % itemsPerRow;
+                
+                const colWidth = trayRect.width / (itemsPerRow + 1);
+                const rowHeight = trayRect.height / 3;
+                
+                xPos = trayRect.left + colWidth * (col + 1) - (item.width / 2);
+                yPos = trayRect.top + rowHeight * (row + 1) - (item.height / 2);
+            }
+            
+            // Apply position
+            itemElement.style.left = `${xPos}px`;
+            itemElement.style.top = `${yPos}px`;
+            
+            // Add to DOM
+            document.body.appendChild(itemElement);
+            
+            // Track as placed
+            if (item.type === 'laptop') {
+                laptopItemsPlaced.push(item);
+            } else {
+                otherItemsPlaced.push(item);
+            }
+            
+            // Update available items
+            initializeItems();
+            
+            // Show continue button if we have at least one item
+            if ((currentTrayType === 'laptop' && laptopItemsPlaced.length > 0) ||
+                (currentTrayType === 'other' && otherItemsPlaced.length > 0)) {
+                progressButton.style.display = 'block';
+            }
+        }
+        
+        // Prepare for next tray
+        function prepareForNextTray() {
+            // Remove all current items
+            document.querySelectorAll('.item-in-tray').forEach(item => {
+                if (document.body.contains(item)) {
+                    document.body.removeChild(item);
+                }
+            });
+            
+            // Switch to other tray type
+            currentTrayType = 'other';
+            updateTrayType();
+            
+            // Initialize next set of items
+            initializeItems();
+        }
+        
+        // Reset the entire experience
+        function resetExperience() {
+            // Clear all items
+            document.querySelectorAll('.item-in-tray').forEach(item => {
+                if (document.body.contains(item)) {
+                    document.body.removeChild(item);
+                }
+            });
+            
+            // Reset state
+            currentTrayType = null;
+            currentPhase = 1;
+            laptopItemsPlaced = [];
+            otherItemsPlaced = [];
+            
+            // Reset UI
+            trayIndicator.textContent = 'Position Your Tray Here';
+            completeMessage.style.display = 'none';
+            nextTrayMessage.style.display = 'none';
+            progressButton.style.display = 'none';
+            positioningGuide.style.display = 'flex';
+        }
+        
+        // Initialize app
+        mainARViewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'session-started') {
+                console.log('AR session started');
+                positioningGuide.style.display = 'flex';
+            }
+        });
+    </script>
+</body>
+</html>
