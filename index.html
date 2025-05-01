@@ -10,7 +10,7 @@
         
         :root {
             --primary-green: #34C759;
-            --light-gray: #D9D9D9;
+            --light-gray: #F5F5F5;
             --black: #000000;
             --white: #FFFFFF;
         }
@@ -33,12 +33,21 @@
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
+            background-color: #000;
+        }
+        
+        .ar-scene {
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
         
         model-viewer {
             width: 100%;
-            height: 100vh;
-            background-color: transparent;
+            height: 100%;
+            --poster-color: transparent;
         }
         
         .ar-button {
@@ -97,7 +106,7 @@
             flex-wrap: wrap;
             gap: 10px;
             padding: 10px;
-            z-index: 10;
+            z-index: 100;
             background-color: rgba(255, 255, 255, 0.7);
             border-top-left-radius: 15px;
             border-top-right-radius: 15px;
@@ -121,9 +130,20 @@
             position: relative;
         }
         
-        .item-button model-viewer {
-            width: 100%;
+        .item-button.active {
+            border: 2px solid var(--primary-green);
+        }
+        
+        .item-thumbnail {
+            width: 60px;
             height: 60px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
         }
         
         .item-button span {
@@ -285,10 +305,178 @@
             font-weight: 600;
             z-index: 100;
             text-align: center;
+            display: none;
+        }
+        
+        /* Controls for item manipulation */
+        .item-controls {
+            position: absolute;
+            top: 85px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .control-button {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--black);
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            width: 44px;
+            height: 44px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-size: 16px;
+        }
+        
+        .control-button.active {
+            background-color: var(--primary-green);
+            color: var(--white);
+        }
+        
+        .done-button {
+            position: absolute;
+            bottom: 120px;
+            left: 20px;
+            background-color: var(--primary-green);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 100;
+            display: none;
+            min-height: 44px;
+        }
+        
+        /* Hide the default AR button since we'll create our own */
+        model-viewer::part(ar-button) {
+            display: none;
+        }
+        
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            color: white;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-green);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .ar-prompt {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 80%;
+            z-index: 900;
+            display: none;
+        }
+        
+        .ar-prompt h2 {
+            color: var(--black);
+            margin-top: 0;
+            font-weight: 600;
+        }
+        
+        /* Remove scrolling and bouncing on iOS */
+        html, body {
+            position: fixed;
+            overflow: hidden;
+        }
+        
+        /* Item Actions UI */
+        .item-action-ui {
+            position: absolute;
+            bottom: 180px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .action-button {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: var(--black);
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            width: 44px;
+            height: 44px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            font-size: 16px;
+        }
+        
+        .action-button.red {
+            background-color: rgba(231, 76, 60, 0.9);
+            color: white;
+        }
+        
+        /* Item name label */
+        .item-label {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 200;
         }
     </style>
 </head>
 <body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <p>Loading AR Experience...</p>
+    </div>
+    
     <div class="initial-instruction" id="initialInstruction">
         <h2>Airport Security Check</h2>
         <p>Place a physical security tray in front of you.</p>
@@ -296,12 +484,18 @@
         <button class="start-button" id="startButton">Start AR Experience</button>
     </div>
     
-    <div class="instructions-panel" style="display: none;" id="instructionsPanel">
-        <h2>Select and Place Items</h2>
-        <p>Tap items below to place them in your physical tray</p>
+    <div class="ar-prompt" id="arPrompt">
+        <h2>Point Camera at Surface</h2>
+        <p>Point your camera at a flat surface where you want to place your items.</p>
+        <p>Ideally, aim at a security tray if you have one.</p>
     </div>
     
-    <div class="tray-mode" id="trayMode" style="display: none;">
+    <div class="instructions-panel" style="display: none;" id="instructionsPanel">
+        <h2>Select and Place Items</h2>
+        <p>Tap items below to place them in your tray. Tap placed items to move/rotate them.</p>
+    </div>
+    
+    <div class="tray-mode" id="trayMode">
         Laptop Tray
     </div>
     
@@ -323,67 +517,97 @@
         Continue to Next Tray
     </button>
     
+    <button class="done-button" id="doneButton" style="display: none;">
+        Done Placing Items
+    </button>
+    
+    <div class="item-controls" id="itemControls" style="display: none;">
+        <button class="control-button active" id="moveButton">↕</button>
+        <button class="control-button" id="rotateButton">↻</button>
+    </div>
+    
+    <div class="item-action-ui" id="itemActionUI" style="display: none;">
+        <button class="action-button red" id="deleteButton">×</button>
+        <button class="action-button" id="scaleUpButton">+</button>
+        <button class="action-button" id="scaleDownButton">-</button>
+    </div>
+    
     <div class="item-selection" id="itemSelection" style="display: none;">
         <!-- Item buttons will be added here -->
     </div>
     
-    <model-viewer 
-        id="arViewer"
-        camera-controls
-        ar
-        ar-modes="webxr scene-viewer quick-look"
-        ar-scale="fixed"
-        ar-placement="floor"
-        interaction-prompt="none"
-        shadow-intensity="1"
-        environment-image="neutral"
-        style="display: none;">
-    </model-viewer>
+    <!-- Main AR Scene -->
+    <div class="ar-scene" id="arScene" style="display: none;">
+        <model-viewer 
+            id="arViewer"
+            ar
+            ar-modes="webxr scene-viewer quick-look"
+            ar-scale="fixed"
+            camera-controls
+            touch-action="pan-y"
+            alt="Airport Security Items"
+            shadow-intensity="1"
+            camera-orbit="0deg 75deg 2m"
+            min-camera-orbit="auto auto auto"
+            max-camera-orbit="auto auto auto"
+            environment-image="neutral">
+            
+            <button slot="ar-button" id="customArButton" class="ar-button">
+                View in Your Space
+            </button>
+        </model-viewer>
+    </div>
     
     <script>
-        // Available items to place with realistic size ratios
+        // Available items to place
         const items = [
             { 
                 id: 'laptop', 
                 name: 'Laptop', 
                 type: 'laptop', 
-                model: 'laptop.glb', 
-                scale: '0.5 0.5 0.5'  // Real-world scale for AR
+                color: '#3498db',
+                src: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb', // Using sample 3D model
+                scale: '0.5 0.1 0.3'
             },
             { 
                 id: 'phone', 
                 name: 'Phone', 
                 type: 'other', 
-                model: 'phone.glb', 
-                scale: '0.3 0.3 0.3'  // Real-world scale for AR (smaller than laptop)
+                color: '#e74c3c',
+                src: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+                scale: '0.2 0.05 0.1'
             },
             { 
                 id: 'charger', 
                 name: 'Charger', 
                 type: 'other', 
-                model: 'charger.glb', 
-                scale: '0.3 0.3 0.3'  // Real-world scale for AR
+                color: '#e67e22',
+                src: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+                scale: '0.15 0.05 0.15'
             },
             { 
                 id: 'bag', 
                 name: 'Bag', 
                 type: 'other', 
-                model: 'bag.glb', 
-                scale: '0.6 0.6 0.6'  // Real-world scale for AR (larger than phone)
+                color: '#9b59b6',
+                src: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+                scale: '0.3 0.3 0.3'
             },
             { 
                 id: 'hat', 
                 name: 'Hat', 
                 type: 'other', 
-                model: 'hat.glb', 
-                scale: '0.4 0.4 0.4'  // Real-world scale for AR (medium size)
+                color: '#2ecc71',
+                src: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+                scale: '0.25 0.1 0.25'
             },
             { 
                 id: 'keys', 
                 name: 'Keys', 
                 type: 'other', 
-                model: 'keys.glb', 
-                scale: '0.25 0.25 0.25'  // Real-world scale for AR (smaller than phone)
+                color: '#f1c40f',
+                src: 'https://modelviewer.dev/shared-assets/models/Astronaut.glb',
+                scale: '0.1 0.05 0.1'
             }
         ];
         
@@ -396,35 +620,88 @@
             other: []
         };
         
+        // Track currently selected item for placing
+        let selectedItem = null;
+        
+        // Track currently selected placed item for manipulation
+        let selectedPlacedItem = null;
+        
+        // Track interaction mode (move or rotate)
+        let interactionMode = 'move';
+        
         // Track AR session state
         let arActive = false;
         
+        // Track unique ID for placed items
+        let placedItemId = 0;
+        
         // DOM Elements
+        const loadingScreen = document.getElementById('loadingScreen');
         const initialInstruction = document.getElementById('initialInstruction');
         const instructionsPanel = document.getElementById('instructionsPanel');
         const itemSelection = document.getElementById('itemSelection');
+        const arScene = document.getElementById('arScene');
         const arViewer = document.getElementById('arViewer');
+        const arPrompt = document.getElementById('arPrompt');
         const feedbackMessage = document.getElementById('feedbackMessage');
         const progressButton = document.getElementById('progressButton');
+        const doneButton = document.getElementById('doneButton');
         const nextTrayMessage = document.getElementById('nextTrayMessage');
         const nextTrayButton = document.getElementById('nextTrayButton');
         const completeMessage = document.getElementById('completeMessage');
         const restartButton = document.getElementById('restartButton');
         const trayMode = document.getElementById('trayMode');
         const startButton = document.getElementById('startButton');
+        const itemControls = document.getElementById('itemControls');
+        const rotateButton = document.getElementById('rotateButton');
+        const moveButton = document.getElementById('moveButton');
+        const customArButton = document.getElementById('customArButton');
+        const itemActionUI = document.getElementById('itemActionUI');
+        const deleteButton = document.getElementById('deleteButton');
+        const scaleUpButton = document.getElementById('scaleUpButton');
+        const scaleDownButton = document.getElementById('scaleDownButton');
         
         // Initialize event listeners
         function initializeApp() {
-            // Start AR button
+            console.log("Initializing app");
+            
+            // Hide loading screen after everything is loaded
+            window.addEventListener('load', () => {
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 1000);
+            });
+            
+            // Start button
             startButton.addEventListener('click', () => {
                 startARExperience();
+            });
+            
+            // Custom AR button - triggers AR mode
+            customArButton.addEventListener('click', () => {
+                // This button is linked to model-viewer's AR mode
+                arPrompt.style.display = 'block';
+                setTimeout(() => {
+                    arPrompt.style.display = 'none';
+                }, 5000);
             });
             
             // Progress button (to move to next tray)
             progressButton.addEventListener('click', () => {
                 if (placedItems.laptop.length > 0) {
                     progressButton.style.display = 'none';
+                    doneButton.style.display = 'none';
                     nextTrayMessage.style.display = 'block';
+                }
+            });
+            
+            // Done button (when finished placing items)
+            doneButton.addEventListener('click', () => {
+                if (currentTrayMode === 'laptop' && placedItems.laptop.length > 0) {
+                    progressButton.style.display = 'block';
+                    showFeedback('Laptop tray complete! Continue when ready.');
+                } else if (currentTrayMode === 'other' && placedItems.other.length > 0) {
+                    completeMessage.style.display = 'block';
                 }
             });
             
@@ -439,6 +716,36 @@
                 resetExperience();
             });
             
+            // Control buttons
+            rotateButton.addEventListener('click', () => {
+                interactionMode = 'rotate';
+                updateControlButtons();
+            });
+            
+            moveButton.addEventListener('click', () => {
+                interactionMode = 'move';
+                updateControlButtons();
+            });
+            
+            // Item action buttons
+            deleteButton.addEventListener('click', () => {
+                if (selectedPlacedItem) {
+                    deletePlacedItem(selectedPlacedItem);
+                }
+            });
+            
+            scaleUpButton.addEventListener('click', () => {
+                if (selectedPlacedItem) {
+                    scaleSelectedItem(1.2); // Increase scale by 20%
+                }
+            });
+            
+            scaleDownButton.addEventListener('click', () => {
+                if (selectedPlacedItem) {
+                    scaleSelectedItem(0.8); // Decrease scale by 20%
+                }
+            });
+            
             // AR status change
             arViewer.addEventListener('ar-status', (event) => {
                 if (event.detail.status === 'session-started') {
@@ -449,6 +756,7 @@
                     instructionsPanel.style.display = 'block';
                     itemSelection.style.display = 'flex';
                     trayMode.style.display = 'block';
+                    doneButton.style.display = 'block';
                     
                     // Initialize items for selection
                     updateItemSelection();
@@ -461,66 +769,42 @@
                 }
             });
             
-            // Model placement listener
-            arViewer.addEventListener('model-visibility', (event) => {
-                if (event.detail.visible) {
-                    // After model is placed and visible
-                    console.log('Model is visible in AR');
-                }
+            // Listen for model-viewer quick-actions
+            arViewer.addEventListener('quick-look-button-tapped', () => {
+                // iOS Quick Look has been activated
+                console.log('Quick Look activated');
             });
         }
         
         // Start the AR experience
         function startARExperience() {
+            console.log("Starting AR experience");
+            
             // Hide initial instruction
             initialInstruction.style.display = 'none';
             
             // Show AR viewer
-            arViewer.style.display = 'block';
+            arScene.style.display = 'block';
             
-            // Start AR mode by clicking AR button
-            setTimeout(() => {
-                // Find and click the AR button to activate camera
-                const arButton = document.querySelector('button[slot="ar-button"]');
-                if (arButton) {
-                    arButton.click();
-                } else {
-                    // Fallback if button not found
-                    arViewer.activateAR();
-                }
-            }, 100);
+            // Show feedback to guide user
+            showFeedback('Tap "View in Your Space" to start AR');
         }
         
         // Update available items based on current tray mode
         function updateItemSelection() {
+            console.log("Updating item selection for mode:", currentTrayMode);
+            
             // Clear current items
             itemSelection.innerHTML = '';
             
             // Get items for current mode
             let availableItems;
             if (currentTrayMode === 'laptop') {
-                availableItems = items.filter(item => 
-                    item.type === 'laptop' && 
-                    !placedItems.laptop.some(placed => placed.id === item.id)
-                );
+                availableItems = items.filter(item => item.type === 'laptop');
                 trayMode.textContent = 'Laptop Tray';
             } else {
-                availableItems = items.filter(item => 
-                    item.type === 'other' && 
-                    !placedItems.other.some(placed => placed.id === item.id)
-                );
+                availableItems = items.filter(item => item.type === 'other');
                 trayMode.textContent = 'Other Items Tray';
-            }
-            
-            // Check if we need to show progress button or complete message
-            if (availableItems.length === 0) {
-                if (currentTrayMode === 'laptop' && placedItems.laptop.length > 0) {
-                    // All laptops placed, show progress button
-                    progressButton.style.display = 'block';
-                } else if (currentTrayMode === 'other' && placedItems.other.length > 0) {
-                    // All items placed, show completion
-                    completeMessage.style.display = 'block';
-                }
             }
             
             // Add buttons for available items
@@ -529,79 +813,266 @@
                 button.className = 'item-button';
                 button.setAttribute('data-id', item.id);
                 
-                // Thumbnail image (model-viewer for preview)
-                const modelViewer = document.createElement('model-viewer');
-                modelViewer.src = item.model;
-                modelViewer.setAttribute('auto-rotate', 'true');
-                modelViewer.setAttribute('camera-controls', 'false');
-                modelViewer.setAttribute('ar', 'false');
-                modelViewer.setAttribute('shadow-intensity', '1');
+                // Create colored thumbnail div
+                const thumbnail = document.createElement('div');
+                thumbnail.className = 'item-thumbnail';
+                thumbnail.style.backgroundColor = item.color;
+                thumbnail.textContent = item.name[0];
                 
                 // Label
                 const label = document.createElement('span');
                 label.textContent = item.name;
                 
-                button.appendChild(modelViewer);
+                button.appendChild(thumbnail);
                 button.appendChild(label);
                 
-                // Add click event to place in AR
+                // Add click event to select item for placement
                 button.addEventListener('click', () => {
-                    placeItemInAR(item);
+                    selectItemForPlacement(item);
                 });
                 
                 itemSelection.appendChild(button);
             });
+            
+            // Check if we need to show progress button or complete message
+            if (currentTrayMode === 'laptop' && placedItems.laptop.length > 0) {
+                // Laptop items placed, show done button
+                doneButton.style.display = 'block';
+            } else if (currentTrayMode === 'other' && placedItems.other.length > 0) {
+                // Other items placed, show done button
+                doneButton.style.display = 'block';
+            }
         }
         
-        // Place an item in AR
-        function placeItemInAR(item) {
-            console.log(`Placing ${item.name} in AR`);
+        // Select an item for placement
+        function selectItemForPlacement(item) {
+            console.log("Selected item for placement:", item.name);
             
-            // Update the main AR viewer with this model
-            arViewer.src = item.model;
-            arViewer.setAttribute('scale', item.scale);
+            // Update selected item
+            selectedItem = item;
+            
+            // Update UI to show selected item
+            const buttons = document.querySelectorAll('.item-button');
+            buttons.forEach(button => {
+                if (button.getAttribute('data-id') === item.id) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
             
             // Show feedback to the user
-            showFeedback(`Place the ${item.name} in your tray`);
+            showFeedback(`Tap in your AR view to place the ${item.name}`);
             
-            // Setup a listener for model placement
-            arViewer.addEventListener('model-visibility', onModelPlaced);
+            // Add click event to AR viewer for placement
+            arViewer.addEventListener('click', placeSelectedItem);
+        }
+        
+        // Place the selected item in the AR scene
+        function placeSelectedItem(event) {
+            if (!selectedItem || !arActive) return;
             
-            // Function to handle when model is placed
-            function onModelPlaced(event) {
-                if (event.detail.visible) {
-                    // Remove this listener to prevent multiple calls
-                    arViewer.removeEventListener('model-visibility', onModelPlaced);
-                    
-                    // Record that the item was placed
-                    if (item.type === 'laptop') {
-                        placedItems.laptop.push(item);
-                    } else {
-                        placedItems.other.push(item);
+            console.log("Placing item:", selectedItem.name);
+            
+            // Remove the event listener to prevent multiple placements
+            arViewer.removeEventListener('click', placeSelectedItem);
+            
+            // Create a unique ID for this placed item
+            const uniqueId = `item-${selectedItem.id}-${placedItemId++}`;
+            
+            // Create a new entity for the item
+            const entity = document.createElement('div');
+            entity.id = uniqueId;
+            entity.setAttribute('data-item-id', selectedItem.id);
+            entity.setAttribute('data-item-type', selectedItem.type);
+            entity.setAttribute('data-item-name', selectedItem.name);
+            
+            // Create a model-viewer element for the 3D model
+            const modelViewer = document.createElement('model-viewer');
+            modelViewer.src = selectedItem.src;
+            modelViewer.setAttribute('camera-controls', 'false');
+            modelViewer.setAttribute('ar', 'false');
+            modelViewer.setAttribute('shadow-intensity', '1');
+            modelViewer.setAttribute('scale', selectedItem.scale);
+            modelViewer.setAttribute('environment-image', 'neutral');
+            modelViewer.style.width = '100%';
+            modelViewer.style.height = '100%';
+            
+            // Add a label for the item
+            const label = document.createElement('div');
+            label.className = 'item-label';
+            label.textContent = selectedItem.name;
+            
+            // Add the model-viewer to the scene
+            entity.appendChild(modelViewer);
+            entity.appendChild(label);
+            arViewer.appendChild(entity);
+            
+            // Make the entity selectable for manipulation
+            entity.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectPlacedItem(entity);
+            });
+            
+            // Record placed item
+            const placedItem = {
+                id: uniqueId,
+                element: entity,
+                model: modelViewer,
+                item: selectedItem,
+                position: { x: 0, y: 0, z: 0 },
+                rotation: { x: 0, y: 0, z: 0 },
+                scale: 1.0
+            };
+            
+            if (selectedItem.type === 'laptop') {
+                placedItems.laptop.push(placedItem);
+            } else {
+                placedItems.other.push(placedItem);
+            }
+            
+            // Show success feedback
+            showFeedback(`${selectedItem.name} placed successfully! Tap to select it for manipulation.`);
+            
+            // Reset for next placement
+            selectedItem = null;
+            
+            // Update selection buttons
+            const buttons = document.querySelectorAll('.item-button');
+            buttons.forEach(button => {
+                button.classList.remove('active');
+            });
+        }
+        
+        // Select a placed item for manipulation
+        function selectPlacedItem(element) {
+            console.log("Selected placed item:", element.id);
+            
+            // Deselect previous item
+            if (selectedPlacedItem) {
+                const previousElement = document.getElementById(selectedPlacedItem.id);
+                if (previousElement) {
+                    const modelViewer = previousElement.querySelector('model-viewer');
+                    if (modelViewer) {
+                        modelViewer.style.border = 'none';
                     }
-                    
-                    // Show success feedback
-                    showFeedback(`${item.name} placed successfully!`);
-                    
-                    // In multi-item mode, show a new model viewer for the next item
-                    arViewer.src = ''; // Clear for next placement
-                    
-                    // Update available items
-                    updateItemSelection();
                 }
             }
+            
+            // Find the placed item in our tracking arrays
+            let placedItem;
+            if (element.getAttribute('data-item-type') === 'laptop') {
+                placedItem = placedItems.laptop.find(item => item.id === element.id);
+            } else {
+                placedItem = placedItems.other.find(item => item.id === element.id);
+            }
+            
+            if (!placedItem) return;
+            
+            // Select new item
+            selectedPlacedItem = placedItem;
+            
+            // Highlight the selected item
+            const modelViewer = element.querySelector('model-viewer');
+            if (modelViewer) {
+                modelViewer.style.border = '2px solid #34C759';
+            }
+            
+            // Show controls
+            itemControls.style.display = 'flex';
+            itemActionUI.style.display = 'flex';
+            updateControlButtons();
+            
+            // Show feedback
+            showFeedback(`Selected ${placedItem.item.name}. Use controls to manipulate it.`);
+        }
+        
+        // Update control buttons based on current mode
+        function updateControlButtons() {
+            if (interactionMode === 'move') {
+                moveButton.classList.add('active');
+                rotateButton.classList.remove('active');
+            } else {
+                rotateButton.classList.add('active');
+                moveButton.classList.remove('active');
+            }
+        }
+        
+        // Scale the selected item
+        function scaleSelectedItem(factor) {
+            if (!selectedPlacedItem) return;
+            
+            // Update the scale tracking value
+            selectedPlacedItem.scale *= factor;
+            
+            // Get the current scale attribute
+            const modelViewer = selectedPlacedItem.element.querySelector('model-viewer');
+            const currentScale = modelViewer.getAttribute('scale');
+            
+            // Parse the current scale components
+            const [x, y, z] = currentScale.split(' ').map(parseFloat);
+            
+            // Apply the scaling factor
+            const newScale = `${x * factor} ${y * factor} ${z * factor}`;
+            modelViewer.setAttribute('scale', newScale);
+            
+            // Show feedback
+            showFeedback(`Adjusted size of ${selectedPlacedItem.item.name}`);
+        }
+        
+        // Delete a placed item
+        function deletePlacedItem(placedItem) {
+            if (!placedItem) return;
+            
+            console.log("Deleting placed item:", placedItem.id);
+            
+            // Remove from DOM
+            if (placedItem.element) {
+                placedItem.element.remove();
+            }
+            
+            // Remove from tracking lists
+            if (placedItem.item.type === 'laptop') {
+                placedItems.laptop = placedItems.laptop.filter(item => item.id !== placedItem.id);
+            } else {
+                placedItems.other = placedItems.other.filter(item => item.id !== placedItem.id);
+            }
+            
+            // Reset selection
+            selectedPlacedItem = null;
+            itemControls.style.display = 'none';
+            itemActionUI.style.display = 'none';
+            
+            // Show feedback
+            showFeedback(`Removed ${placedItem.item.name}`);
         }
         
         // Switch to other items tray
         function switchToOtherItemsTray() {
+            console.log("Switching to other items tray");
+            
+            // Hide all laptop items
+            placedItems.laptop.forEach(item => {
+                if (item.element) {
+                    item.element.style.display = 'none';
+                }
+            });
+            
+            // Switch mode
             currentTrayMode = 'other';
-            trayMode.textContent = 'Other Items Tray';
             updateItemSelection();
-            showFeedback('Now place your other items in the new tray');
+            doneButton.style.display = 'block';
+            itemControls.style.display = 'none';
+            itemActionUI.style.display = 'none';
+            selectedPlacedItem = null;
+            
+            showFeedback('Now place your other items in a new tray');
         }
         
         // Show feedback message
         function showFeedback(message, isSuccess = true) {
+            console.log("Feedback:", message);
+            
             feedbackMessage.textContent = message;
             feedbackMessage.style.backgroundColor = isSuccess ? 
                 'rgba(52, 199, 89, 0.9)' : 'rgba(255, 59, 48, 0.9)';
@@ -615,32 +1086,67 @@
         
         // Reset the experience
         function resetExperience() {
+            console.log("Resetting experience");
+            
+            // Remove all placed items
+            placedItems.laptop.forEach(item => {
+                if (item.element) {
+                    item.element.remove();
+                }
+            });
+            
+            placedItems.other.forEach(item => {
+                if (item.element) {
+                    item.element.remove();
+                }
+            });
+            
             // Reset data
             currentTrayMode = 'laptop';
             placedItems = {
                 laptop: [],
                 other: []
             };
+            selectedItem = null;
+            selectedPlacedItem = null;
+            placedItemId = 0;
             
             // Reset UI
             completeMessage.style.display = 'none';
+            itemControls.style.display = 'none';
+            itemActionUI.style.display = 'none';
             
             // Exit AR if active
             if (arActive) {
                 arViewer.exitAR();
+                arActive = false;
             }
             
             // Return to start screen
             initialInstruction.style.display = 'block';
-            arViewer.style.display = 'none';
+            arScene.style.display = 'none';
             instructionsPanel.style.display = 'none';
             itemSelection.style.display = 'none';
             trayMode.style.display = 'none';
             progressButton.style.display = 'none';
+            doneButton.style.display = 'none';
+        }
+        
+        // Handle gesture interactions with placed items (move/rotate)
+        function setupGestureInteractions() {
+            // Add hammer.js or custom interaction handling here if needed
+            // This is a placeholder for adding drag & rotate functionality
+            // to placed items directly in the AR scene
+            
+            // For model-viewer, we could use the camera-orbit attribute
+            // along with mouse/touch events to enable item manipulation
         }
         
         // Initialize the app
-        window.addEventListener('load', initializeApp);
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            setupGestureInteractions();
+        });
     </script>
 </body>
 </html>
